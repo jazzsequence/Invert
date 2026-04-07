@@ -59,16 +59,77 @@ const docs = await getContentByType('docs');
     </div>
   )}
 
-  <div class="quickstart">
-    <h2>Quick start</h2>
-    <ol>
-      <li>Click <strong>Use this template</strong> on GitHub to create your repo</li>
-      <li>Clone it and run <code>npm install</code></li>
-      <li>Edit <code>src/lib/config.ts</code> — set your site name, configure adapters</li>
-      <li>Add content to <code>content/</code> (JSON) or <code>markdown/</code> (Markdown)</li>
-      <li>Run <code>npm run dev</code></li>
-      <li>Optionally: <code>npm run mcp</code> in a second terminal to start the MCP server</li>
-    </ol>
+  <div class="getting-started">
+    <h2>Getting started</h2>
+
+    <div class="gs-step">
+      <h3><span class="step-num">1</span> Use the template</h3>
+      <p>
+        Click <strong>Use this template</strong> on the
+        <a href="https://github.com/jazzsequence/invert">GitHub repo</a> to create your own repository,
+        then clone it locally.
+      </p>
+    </div>
+
+    <div class="gs-step">
+      <h3><span class="step-num">2</span> Install dependencies</h3>
+      <p>Requires Node.js &gt;= 22. If you use nvm:</p>
+      <pre><code>nvm use
+npm install</code></pre>
+    </div>
+
+    <div class="gs-step">
+      <h3><span class="step-num">3</span> Configure your site</h3>
+      <p>Edit <code>src/lib/config.ts</code> to set your site name, URL, and which adapters to use:</p>
+      <pre><code>export const invertConfig = {
+  siteName: 'My Site',
+  siteUrl: 'https://example.com',
+  adapters: [
+    new JsonAdapter({ contentDir: join(root, 'content') }),
+    new MarkdownAdapter({ source: 'local', contentDir: join(root, 'markdown') }),
+  ],
+};</code></pre>
+    </div>
+
+    <div class="gs-step">
+      <h3><span class="step-num">4</span> Add content</h3>
+      <p>
+        Drop <strong>JSON files</strong> into <code>content/[type]/[slug].json</code> or
+        <strong>Markdown files</strong> into <code>markdown/</code> with YAML frontmatter.
+        The directory name becomes the content type; the filename becomes the slug.
+      </p>
+      <pre><code>content/
+  posts/
+    my-post.json        → /posts/my-post
+markdown/
+  about.md              → /pages/about (if contentType: pages)</code></pre>
+    </div>
+
+    <div class="gs-step">
+      <h3><span class="step-num">5</span> Run the dev server</h3>
+      <pre><code>npm run dev</code></pre>
+      <p>Your site is live at <code>http://localhost:4321</code>. Content updates reload automatically.</p>
+    </div>
+
+    <div class="gs-step">
+      <h3><span class="step-num">6</span> Optionally: start the MCP server</h3>
+      <p>In a second terminal:</p>
+      <pre><code>npm run mcp</code></pre>
+      <p>
+        Connect it to Claude Desktop or any MCP client. AI tools can then list, search, create,
+        and update content items via the <code>invert_*</code> tools.
+        Write operations produce JSON files in <code>content/</code> and hot-reload into the dev server.
+      </p>
+    </div>
+
+    <div class="gs-step">
+      <h3><span class="step-num">7</span> Deploy</h3>
+      <p>
+        Run <code>npm run build</code> and deploy the <code>dist/</code> directory to any static host.
+        GitHub Pages and Cloudflare Pages are both supported out of the box —
+        see the <a href={url('docs/getting-started')}>Getting Started doc</a> for details.
+      </p>
+    </div>
   </div>
 </Base>
 
@@ -99,8 +160,46 @@ const docs = await getContentByType('docs');
   .docs-toc a { text-decoration: none; color: #0066cc; font-weight: 500; }
   .docs-toc a:hover { text-decoration: underline; }
   .doc-excerpt { color: #888; font-size: 0.9rem; }
-  .quickstart h2 { font-size: 1.4rem; margin-bottom: 0.75rem; }
-  .quickstart ol { padding-left: 1.5rem; }
-  .quickstart li { margin-bottom: 0.5rem; line-height: 1.6; }
-  .quickstart code { font-size: 0.9em; background: #f5f5f5; padding: 0.1em 0.4em; border-radius: 3px; }
+  .getting-started h2 { font-size: 1.4rem; margin-bottom: 1.5rem; }
+  .gs-step {
+    border-left: 3px solid #e5e5e5;
+    padding-left: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .gs-step h3 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .step-num {
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .gs-step p { margin: 0 0 0.75rem; font-size: 0.95rem; color: #444; line-height: 1.6; }
+  .gs-step p:last-child { margin-bottom: 0; }
+  .gs-step a { color: #0066cc; }
+  .gs-step pre {
+    background: #f5f5f5;
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0 0.75rem;
+    overflow-x: auto;
+  }
+  .gs-step code { font-size: 0.85rem; }
+  .gs-step p code {
+    background: #f5f5f5;
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+  }
 </style>
