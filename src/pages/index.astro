@@ -1,16 +1,106 @@
 ---
 import Base from '../layouts/Base.astro';
-import ContentCard from '../components/ContentCard.astro';
-import { getAllContent } from '../lib/content.ts';
+import { getContentByType } from '../lib/content.ts';
 
-const content = await getAllContent();
-const recent = content.slice(0, 10);
+const docs = await getContentByType('docs');
+const base = import.meta.env.BASE_URL;
 ---
 
 <Base>
-  <h1>Recent Content</h1>
-  {recent.length === 0 && (
-    <p>No content found. Add JSON files to <code>content/</code> or markdown files to <code>markdown/</code>.</p>
+  <div class="hero">
+    <h1>Invert</h1>
+    <p class="tagline">A database-less, adapter-driven content presentation layer built on Astro.</p>
+  </div>
+
+  <div class="intro">
+    <p>
+      Invert is not a CMS. It's the thing that sits in front of your CMS — or in front of no CMS at all —
+      and renders content from any source. There is no admin panel. There is no database.
+      Content comes in as JSON or Markdown. Where that content comes from is not Invert's problem.
+      That's what <strong>adapters</strong> are for.
+    </p>
+    <p>
+      An adapter can read static JSON files from disk, parse Markdown from a local directory,
+      fetch from a WordPress REST API, pull from a GitHub repo, or receive structured input from an AI tool over MCP.
+      Multiple adapters run simultaneously — content merges from all sources.
+    </p>
+  </div>
+
+  <div class="concepts">
+    <div class="concept">
+      <h3>No database</h3>
+      <p>All content is JSON at rest or in transit. No ORM, no migrations, no connections.</p>
+    </div>
+    <div class="concept">
+      <h3>No admin panel</h3>
+      <p>Content is managed externally. Invert only reads and renders. The admin can be anything.</p>
+    </div>
+    <div class="concept">
+      <h3>Adapters are the integration point</h3>
+      <p>Each content source implements <code>InvertAdapter</code>. Swap them in and out in config.</p>
+    </div>
+    <div class="concept">
+      <h3>MCP is first-class</h3>
+      <p>An MCP server ships out of the box. AI tools can query and write content without a UI.</p>
+    </div>
+  </div>
+
+  {docs.length > 0 && (
+    <div class="docs-toc">
+      <h2>Documentation</h2>
+      <ul>
+        {docs.map((doc) => (
+          <li>
+            <a href={`${base}docs/${doc.slug}`}>{doc.title}</a>
+            {doc.excerpt && <span class="doc-excerpt"> — {doc.excerpt}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
   )}
-  {recent.map((item) => <ContentCard content={item} />)}
+
+  <div class="quickstart">
+    <h2>Quick start</h2>
+    <ol>
+      <li>Click <strong>Use this template</strong> on GitHub to create your repo</li>
+      <li>Clone it and run <code>npm install</code></li>
+      <li>Edit <code>src/lib/config.ts</code> — set your site name, configure adapters</li>
+      <li>Add content to <code>content/</code> (JSON) or <code>markdown/</code> (Markdown)</li>
+      <li>Run <code>npm run dev</code></li>
+      <li>Optionally: <code>npm run mcp</code> in a second terminal to start the MCP server</li>
+    </ol>
+  </div>
 </Base>
+
+<style>
+  .hero { margin-bottom: 1.5rem; }
+  .hero h1 { font-size: 3rem; margin: 0 0 0.5rem; }
+  .tagline { font-size: 1.2rem; color: #555; margin: 0; }
+  .intro { margin-bottom: 2.5rem; }
+  .intro p { font-size: 1.05rem; line-height: 1.7; color: #333; }
+  .concepts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+  }
+  .concept {
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    padding: 1.25rem;
+  }
+  .concept h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+  .concept p { margin: 0; font-size: 0.9rem; color: #555; line-height: 1.5; }
+  .concept code { font-size: 0.85em; background: #f5f5f5; padding: 0.1em 0.3em; border-radius: 3px; }
+  .docs-toc { margin-bottom: 2.5rem; }
+  .docs-toc h2 { font-size: 1.4rem; margin-bottom: 0.75rem; }
+  .docs-toc ul { list-style: none; padding: 0; margin: 0; }
+  .docs-toc li { padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
+  .docs-toc a { text-decoration: none; color: #0066cc; font-weight: 500; }
+  .docs-toc a:hover { text-decoration: underline; }
+  .doc-excerpt { color: #888; font-size: 0.9rem; }
+  .quickstart h2 { font-size: 1.4rem; margin-bottom: 0.75rem; }
+  .quickstart ol { padding-left: 1.5rem; }
+  .quickstart li { margin-bottom: 0.5rem; line-height: 1.6; }
+  .quickstart code { font-size: 0.9em; background: #f5f5f5; padding: 0.1em 0.4em; border-radius: 3px; }
+</style>

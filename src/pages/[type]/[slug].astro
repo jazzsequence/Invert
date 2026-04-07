@@ -17,7 +17,7 @@ const content = await getContentBySlug(type, slug);
 <Base title={content?.title}>
   {content ? (
     <>
-      <a href={`/${type}/`} class="back-link">← {type}</a>
+      <a href={`${import.meta.env.BASE_URL}${type}/`} class="back-link">← {type}</a>
       <ContentBody content={content} />
     </>
   ) : (

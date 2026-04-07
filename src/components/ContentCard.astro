@@ -10,7 +10,7 @@ const { content } = Astro.props;
 
 <article class="content-card">
   {content.featuredImage && (
-    <a href={`/${content.contentType}/${content.slug}`}>
+    <a href={`${import.meta.env.BASE_URL}${content.contentType}/${content.slug}`}>
       <img src={content.featuredImage} alt={content.title} class="featured-image" />
     </a>
   )}
@@ -20,7 +20,7 @@ const { content } = Astro.props;
       {content.date && <time datetime={content.date}>{content.date.slice(0, 10)}</time>}
       {content.author && <span class="author">by {content.author}</span>}
     </p>
-    <h2><a href={`/${content.contentType}/${content.slug}`}>{content.title}</a></h2>
+    <h2><a href={`${import.meta.env.BASE_URL}${content.contentType}/${content.slug}`}>{content.title}</a></h2>
     {content.excerpt && <p class="excerpt">{content.excerpt}</p>}
   </div>
 </article>
