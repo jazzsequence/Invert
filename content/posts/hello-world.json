@@ -1,0 +1,13 @@
+{
+  "id": "hello-world",
+  "slug": "hello-world",
+  "title": "Hello World",
+  "contentType": "posts",
+  "date": "2026-04-06",
+  "author": "Invert",
+  "excerpt": "Welcome to Invert, the database-less, adapter-driven content presentation layer.",
+  "body": "<p>Welcome to <strong>Invert</strong> — a database-less, adapter-driven content presentation layer built on Astro.</p><p>There is no admin panel. There is no database. Content comes in as JSON. Where that JSON comes from is not Invert's problem — that's what adapters are for.</p><h2>Getting Started</h2><p>Edit <code>src/lib/config.ts</code> to configure your adapters and site settings. Add your content to <code>content/</code> (JSON) or <code>markdown/</code> (Markdown) and run <code>npm run dev</code>.</p>",
+  "taxonomies": {
+    "tags": ["invert", "getting-started"]
+  }
+}

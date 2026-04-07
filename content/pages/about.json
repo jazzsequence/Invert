@@ -1,0 +1,7 @@
+{
+  "id": "about",
+  "slug": "about",
+  "title": "About Invert",
+  "contentType": "pages",
+  "body": "<p>Invert is a database-less, headless, adapter-driven content presentation layer built on Astro. It is not a CMS. It is the thing that sits in front of your CMS — or in front of no CMS at all — and renders content from any source.</p><p>There is no admin panel. There is no database. Content comes in as JSON. Where that JSON comes from is not Invert's problem — that's what adapters are for.</p><h2>Philosophy</h2><p>The presentation layer and the content management layer are separate concerns. You can have a modern frontend without throwing away your CMS. You can have AI-powered content management without replacing your admin panel with a chatbot. The choice is yours.</p>"
+}

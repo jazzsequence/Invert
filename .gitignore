@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Astro generated files
+.astro/
+
+# Wrangler local state
+.wrangler/
+worker-configuration.d.ts
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Claude Code local session data
+.claude/
+
+# macOS
+.DS_Store

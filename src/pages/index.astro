@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import ContentCard from '../components/ContentCard.astro';
+import { getAllContent } from '../lib/content.ts';
+
+const content = await getAllContent();
+const recent = content.slice(0, 10);
+---
+
+<Base>
+  <h1>Recent Content</h1>
+  {recent.length === 0 && (
+    <p>No content found. Add JSON files to <code>content/</code> or markdown files to <code>markdown/</code>.</p>
+  )}
+  {recent.map((item) => <ContentCard content={item} />)}
+</Base>

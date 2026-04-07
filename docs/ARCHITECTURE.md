@@ -1,3 +1,11 @@
+---
+title: Invert — Architecture
+slug: architecture
+contentType: docs
+date: 2026-04-06
+excerpt: How Invert works — adapter-driven content presentation, the content shape, MCP integration, and deployment.
+---
+
 # Invert
 
 > An inversion is when you flip yourself upside down. You hold your whole body weight in your hands and arms while you flip 180 degrees in relation to the ground. It's a fundamental move in all of aerials — a test of grip and strength. In this context, Invert also means "go back" or "flip around" or "look at the environment from a different angle." It's all the same stuff. We don't have to throw our toys away. We can have new things and still honor the old things.
