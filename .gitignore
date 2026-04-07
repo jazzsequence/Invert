@@ -16,8 +16,10 @@ worker-configuration.d.ts
 .env.*
 !.env.example
 
-# Claude Code local session data
+# AI config
 .claude/
+.mcp.json
+.claude-flow/
 
 # macOS
 .DS_Store
