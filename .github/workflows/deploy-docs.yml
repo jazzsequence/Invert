@@ -10,6 +10,7 @@ on:
       - 'markdown/**'
       - 'astro.config.mjs'
       - 'package*.json'
+      - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
 permissions:
