@@ -51,7 +51,7 @@ const docs = await getContentByType('docs');
       <ul>
         {docs.map((doc) => (
           <li>
-            <a href={url(`docs/${doc.slug}`)}>{doc.title}</a>
+            <a href={url('docs/' + doc.slug)}>{doc.title}</a>
             {doc.excerpt && <span class="doc-excerpt"> — {doc.excerpt}</span>}
           </li>
         ))}
@@ -81,14 +81,7 @@ npm install</code></pre>
     <div class="gs-step">
       <h3><span class="step-num">3</span> Configure your site</h3>
       <p>Edit <code>src/lib/config.ts</code> to set your site name, URL, and which adapters to use:</p>
-      <pre><code>export const invertConfig = {
-  siteName: 'My Site',
-  siteUrl: 'https://example.com',
-  adapters: [
-    new JsonAdapter({ contentDir: join(root, 'content') }),
-    new MarkdownAdapter({ source: 'local', contentDir: join(root, 'markdown') }),
-  ],
-};</code></pre>
+      <pre><code>{"export const invertConfig = {\n  siteName: 'My Site',\n  siteUrl: 'https://example.com',\n  adapters: [\n    new JsonAdapter({ contentDir: join(root, 'content') }),\n    new MarkdownAdapter({ source: 'local', contentDir: join(root, 'markdown') }),\n  ],\n};"}</code></pre>
     </div>
 
     <div class="gs-step">
