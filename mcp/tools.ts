@@ -2,6 +2,11 @@ import { readFile, writeFile, unlink, readdir } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import type { InvertContent } from '../src/adapters/interface.ts';
 
+// MCP write tools intentionally target content/ only — the JSON adapter's write path.
+// This is by design: Invert treats markdown files (markdown/, docs/) as externally
+// managed source files, not AI-writable content. If you want AI tools to write
+// markdown, point them at your source repo directly. The MCP server's job is to
+// create and mutate structured content items, which the JSON adapter owns.
 const CONTENT_DIR = './content';
 
 export async function invertList(
