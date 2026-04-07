@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ContentBody from '../../components/ContentBody.astro';
 import { getAllContent, getContentBySlug } from '../../lib/content.ts';
+import { url } from '../../lib/utils.ts';
 
 export async function getStaticPaths() {
   const all = await getAllContent();
@@ -17,7 +18,7 @@ const content = await getContentBySlug(type, slug);
 <Base title={content?.title}>
   {content ? (
     <>
-      <a href={`${import.meta.env.BASE_URL}${type}/`} class="back-link">← {type}</a>
+      <a href={url(`${type}/`)} class="back-link">← {type}</a>
       <ContentBody content={content} />
     </>
   ) : (

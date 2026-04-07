@@ -1,9 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
 import { getContentByType } from '../lib/content.ts';
+import { url } from '../lib/utils.ts';
 
 const docs = await getContentByType('docs');
-const base = import.meta.env.BASE_URL;
 ---
 
 <Base>
@@ -51,7 +51,7 @@ const base = import.meta.env.BASE_URL;
       <ul>
         {docs.map((doc) => (
           <li>
-            <a href={`${base}docs/${doc.slug}`}>{doc.title}</a>
+            <a href={url(`docs/${doc.slug}`)}>{doc.title}</a>
             {doc.excerpt && <span class="doc-excerpt"> — {doc.excerpt}</span>}
           </li>
         ))}
