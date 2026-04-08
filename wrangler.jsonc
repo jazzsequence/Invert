@@ -1,18 +1,22 @@
 {
-	// Cloudflare Pages configuration for Invert.
-	// Used by: `wrangler pages dev dist/` for local preview and CI/CD deployment.
+	// Cloudflare Pages + Workers configuration for Invert.
+	// Used by the @astrojs/cloudflare adapter during `astro build` and `wrangler pages dev`.
 	//
 	// Required setup before deploying:
-	//   1. Replace YOUR-PROJECT-NAME with your Cloudflare Pages project name
+	//   1. Replace your-project-name with your Cloudflare Pages project name
 	//   2. Run: npx wrangler kv namespace create CONTENT
 	//      Then paste the returned ID into kv_namespaces below
 	//   3. Set GITHUB_REPO and GITHUB_BRANCH in vars below
 	//   4. Add GITHUB_TOKEN as an encrypted secret in the Cloudflare dashboard
 	//      (Workers & Pages → your project → Settings → Variables)
+	//
+	// NOTE: pages_build_output_dir is intentionally omitted here. The @astrojs/cloudflare
+	// adapter generates its own prerender worker config during build; including
+	// pages_build_output_dir causes Wrangler to reject the ASSETS binding it needs.
+	// Cloudflare Pages CI/CD (triggered by git push) handles deployment automatically.
 	"compatibility_date": "2026-04-07",
 	"compatibility_flags": ["nodejs_compat"],
-	"name": "YOUR-PROJECT-NAME",
-	"pages_build_output_dir": "./dist",
+	"name": "your-project-name",
 	// KV namespace for content storage.
 	// Created with: npx wrangler kv namespace create CONTENT
 	"kv_namespaces": [
@@ -23,7 +27,7 @@
 	],
 	// Plain-text vars — safe to commit. GITHUB_TOKEN goes in the dashboard as a secret.
 	"vars": {
-		"SITE_NAME": "YOUR-SITE-NAME",
+		"SITE_NAME": "your-site-name",
 		"GITHUB_REPO": "owner/your-repo",
 		"GITHUB_BRANCH": "main"
 	},

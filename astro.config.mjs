@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
+import cloudflare from '@astrojs/cloudflare';
 
 // For GitHub Pages project sites, set SITE_BASE to the repo name (e.g. /invert).
 // Leave unset for root deployments (custom domain or Cloudflare Pages).
@@ -11,4 +12,5 @@ export default defineConfig({
   site,
   base,
   output: 'static',
+  adapter: cloudflare(),
 });
