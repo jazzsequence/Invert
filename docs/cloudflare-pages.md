@@ -103,13 +103,11 @@ Uploads the static site and the Pages Function (`functions/api/mcp.ts`) together
 
 Go to **Cloudflare dashboard → Workers & Pages → your project → Settings → Variables**.
 
-Add the following:
+Add the following variables:
 
-| Variable | Value | Notes |
-|---|---|---|
-| `GITHUB_TOKEN` | GitHub PAT | Needs Contents: read & write on the repo |
-| `GITHUB_REPO` | `owner/repo` | e.g. `jazzsequence/dragonfly` |
-| `GITHUB_BRANCH` | `main` | Or your production branch |
+- **`GITHUB_TOKEN`** — a GitHub PAT with Contents: read & write on your repo (see below)
+- **`GITHUB_REPO`** — your repo in `owner/repo` format, e.g. `jazzsequence/dragonfly`
+- **`GITHUB_BRANCH`** — your production branch, e.g. `main`
 
 **Creating a GitHub PAT (fine-grained token):**
 
