@@ -42,15 +42,15 @@ const pageTitle = title ? `${title} — ${invertConfig.siteName}` : invertConfig
 </html>
 
 <style is:global>
-  header {
+  body > header {
     border-bottom: 1px solid var(--color-border);
     padding: 1rem var(--space-page);
     display: flex;
     align-items: center;
     gap: 2rem;
   }
-  header a { text-decoration: none; color: inherit; }
-  header .site-name { font-weight: 700; font-size: 1.25rem; font-family: var(--font-heading); }
+  body > header a { text-decoration: none; color: inherit; }
+  body > header .site-name { font-weight: 700; font-size: 1.25rem; font-family: var(--font-heading); }
   nav { display: flex; gap: 1rem; }
   nav a { color: var(--color-muted); font-size: 0.9rem; text-transform: capitalize; }
   nav a:hover { color: var(--color-text); }
