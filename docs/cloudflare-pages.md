@@ -3,7 +3,7 @@ title: Deploying to Cloudflare Pages
 slug: cloudflare-pages
 contentType: docs
 date: 2026-04-08
-excerpt: How to deploy an Invert site to Cloudflare Pages using Wrangler CLI, including the native HTTP MCP server.
+excerpt: How to deploy an Invert site to Cloudflare Pages using Wrangler CLI, including the native HTTP MCP server with KV-backed writes.
 ---
 
 # Deploying to Cloudflare Pages
@@ -12,11 +12,29 @@ Cloudflare Pages hosts your static Invert site and runs the MCP server at the ed
 
 > **Use Wrangler CLI for setup.** The Cloudflare dashboard UI for connecting a GitHub repository is unreliable. The CLI approach below works consistently.
 
+## What you get
+
+- Static Astro site on a `*.pages.dev` domain (or custom domain)
+- `/api/mcp` — the full Invert MCP server running at the edge, all 7 tools
+- **Writes land in Cloudflare KV immediately** — readable by the MCP at once
+- **Async GitHub commit** — git stays in sync, GitHub Actions rebuilds the static site (~1-2 min delay for web pages)
+
+## How the write model works
+
+```
+AI tool → invert_create → KV (instant) → MCP reads reflect it immediately
+                        → GitHub API commit (async) → Actions rebuild → static site updated
+```
+
+Read operations merge two sources — KV (freshest) and the static manifest (`dist/_api/content.json`) — with KV winning on any conflict.
+
 ## Prerequisites
 
-- A [Cloudflare account](https://dash.cloudflare.com/sign-up) (free tier is sufficient)
+- A [Cloudflare account](https://dash.cloudflare.com/sign-up) (free tier works)
 - Your site repository on GitHub
 - Node.js 22+
+
+---
 
 ## Step 1 — Authenticate with Cloudflare
 
@@ -24,45 +42,82 @@ Cloudflare Pages hosts your static Invert site and runs the MCP server at the ed
 npx wrangler login
 ```
 
-This opens a browser window. Authorize Wrangler and return to the terminal.
+Opens a browser to authorize Wrangler. Return to the terminal when done.
 
 ## Step 2 — Create the Pages project
 
 ```bash
-npx wrangler pages project create dragonfly --production-branch main
+npx wrangler pages project create YOUR-PROJECT-NAME --production-branch main
 ```
 
-Replace `dragonfly` with your project name. This creates the project in your Cloudflare account. Cloudflare will assign a `*.pages.dev` domain — note it for Step 4.
+Cloudflare assigns a `*.pages.dev` domain — note it for Step 5.
 
-## Step 3 — Build the site
+## Step 3 — Create the KV namespace
+
+```bash
+npx wrangler kv namespace create CONTENT
+```
+
+Copy the `id` from the output and paste it into `wrangler.jsonc`:
+
+```jsonc
+"kv_namespaces": [
+  {
+    "binding": "CONTENT",
+    "id": "YOUR_KV_NAMESPACE_ID_HERE"
+  }
+]
+```
+
+## Step 4 — Build the site
 
 ```bash
 npm run build
 ```
 
-This runs `astro build` followed by `scripts/generate-manifest.mjs`, which writes `dist/_api/content.json` — the content manifest used by the edge MCP server.
+Runs `astro build` then `scripts/generate-manifest.mjs`, which writes `dist/_api/content.json` — the static content manifest used as a read fallback by the edge MCP.
 
-## Step 4 — Set SITE_URL and rebuild
-
-Open `astro.config.mjs` — the `SITE_URL` environment variable controls the canonical site URL. Set it before building for production:
+## Step 5 — Set SITE_URL and rebuild
 
 ```bash
-SITE_URL=https://dragonfly.pages.dev npm run build
+SITE_URL=https://your-project.pages.dev npm run build
 ```
 
-Replace `dragonfly.pages.dev` with your assigned domain from Step 2.
+Replace with your assigned domain from Step 2.
 
-## Step 5 — Deploy
+## Step 6 — Deploy
 
 ```bash
 npx wrangler pages deploy dist/
 ```
 
-Wrangler uploads the static site and the Pages Function (`functions/api/mcp.ts`) together. Your site is live.
+Uploads the static site and the Pages Function (`functions/api/mcp.ts`) together.
 
-## Step 6 — Set up automated deployments (GitHub Actions)
+## Step 7 — Set environment variables in Cloudflare
 
-Future deploys can run automatically on push to `main`. You need two secrets in your GitHub repository.
+Go to **Cloudflare dashboard → Workers & Pages → your project → Settings → Variables**.
+
+Add the following:
+
+| Variable | Value | Notes |
+|---|---|---|
+| `GITHUB_TOKEN` | GitHub PAT | Needs Contents: read & write on the repo |
+| `GITHUB_REPO` | `owner/repo` | e.g. `jazzsequence/dragonfly` |
+| `GITHUB_BRANCH` | `main` | Or your production branch |
+
+**Creating a GitHub PAT (fine-grained token):**
+
+1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+2. Click **Generate new token**
+3. Under "Repository access", select your site repo
+4. Under "Repository permissions", set **Contents** to **Read and write**
+5. Generate and copy the token
+
+Without `GITHUB_TOKEN`, write tools still work but content lives only in KV — it will not survive a full site rebuild from git.
+
+## Step 8 — Set up automated deployments (GitHub Actions)
+
+Future deploys run automatically on push to `main`.
 
 **Get your Account ID:**
 
@@ -70,60 +125,60 @@ Future deploys can run automatically on push to `main`. You need two secrets in 
 npx wrangler whoami
 ```
 
-The account ID is printed in the output.
-
-**Create an API token:**
+**Create a Cloudflare API token:**
 
 1. Go to [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)
-2. Click **Create Token** → use the **Cloudflare Pages** template
-3. Scope it to your account, click through to create, and copy the token
+2. Click **Create Token** → **Create Custom Token**
+3. Give it a name (e.g. "Dragonfly Pages Deploy")
+4. Under **Permissions**, add:
+   - Account → Cloudflare Pages → Edit
+5. Under **Account Resources**, select your account
+6. Click **Continue to summary** → **Create Token** and copy it
 
-**Add secrets to GitHub:**
+**Add to GitHub** (repo → Settings → Secrets and variables → Actions):
 
-Go to your repo → **Settings → Secrets and variables → Actions** and add:
+- Secret: `CLOUDFLARE_API_TOKEN`
+- Secret: `CLOUDFLARE_ACCOUNT_ID`
+- Variable: `SITE_URL` = `https://your-project.pages.dev`
 
-- `CLOUDFLARE_API_TOKEN` — the token you just created
-- `CLOUDFLARE_ACCOUNT_ID` — from `wrangler whoami`
+The workflow at `.github/workflows/deploy-cloudflare.yml` handles the rest.
 
-Also add a **repository variable** (not a secret) for the site URL:
-
-- Go to **Settings → Secrets and variables → Actions → Variables**
-- Add `SITE_URL` = `https://dragonfly.pages.dev`
-
-The workflow at `.github/workflows/deploy-cloudflare.yml` runs on every push to `main` and handles the build and deploy automatically.
+---
 
 ## Connecting the MCP server
 
-Your MCP server is available at `https://your-project.pages.dev/api/mcp`.
-
-To connect it to Claude Code, add to your MCP config (`~/.claude/mcp.json` or `.mcp.json` in the project):
+Add to your MCP client config (`~/.claude/mcp.json` or project `.mcp.json`):
 
 ```json
 {
   "mcpServers": {
-    "dragonfly": {
-      "url": "https://dragonfly.pages.dev/api/mcp"
+    "my-site": {
+      "url": "https://your-project.pages.dev/api/mcp"
     }
   }
 }
 ```
 
-The edge MCP server is **read-only**: it supports `invert_list`, `invert_get`, `invert_search`, and `invert_types`. Write tools (`invert_create`, `invert_update`, `invert_delete`) require the local MCP server (`npm run mcp`), which has filesystem access.
+All 7 tools are available: `invert_list`, `invert_get`, `invert_search`, `invert_types`, `invert_create`, `invert_update`, `invert_delete`.
+
+You can verify the server at `GET /api/mcp` — it returns a JSON summary including whether GitHub sync is configured.
+
+---
 
 ## Local preview with Wrangler
-
-To test the Pages Function locally before deploying:
 
 ```bash
 npm run build
 npx wrangler pages dev dist/
 ```
 
-This starts a local server at `http://localhost:8788` with the static site and MCP function running together. The MCP endpoint will be at `http://localhost:8788/api/mcp`.
+Starts a local server at `http://localhost:8788` with the static site and MCP function running together. The MCP endpoint is at `http://localhost:8788/api/mcp`.
+
+Note: local KV uses a Wrangler-managed SQLite store. Data written locally does not affect your production KV namespace.
 
 ## Custom domain
 
-1. In the Cloudflare dashboard: **Workers & Pages → your project → Custom domains**
-2. Add your domain and follow the DNS instructions
-3. Update `SITE_URL` in GitHub repository variables to your custom domain
-4. Trigger a redeploy (push a commit or run the workflow manually)
+1. Cloudflare dashboard → your project → **Custom domains** → add your domain
+2. Follow the DNS instructions
+3. Update `SITE_URL` in GitHub repository variables
+4. Trigger a redeploy
