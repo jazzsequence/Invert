@@ -109,13 +109,15 @@ Add the following variables:
 - **`GITHUB_REPO`** — your repo in `owner/repo` format, e.g. `jazzsequence/dragonfly`
 - **`GITHUB_BRANCH`** — your production branch, e.g. `main`
 
-**Creating a GitHub PAT (fine-grained token):**
+**Creating a GitHub fine-grained token:**
 
-1. GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+1. Go to GitHub → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens**
 2. Click **Generate new token**
-3. Under "Repository access", select your site repo
-4. Under "Repository permissions", set **Contents** to **Read and write**
-5. Generate and copy the token
+3. Give it a name and set an expiration
+4. Under **Resource owner**, select your account (or org if the repo is in one)
+5. Under **Repository access**, choose **Only select repositories** and pick your site repo
+6. Under **Permissions → Repository permissions**, find **Contents** and set it to **Read and write**
+7. Click **Generate token** and copy it — you won't see it again
 
 Without `GITHUB_TOKEN`, write tools still work but content lives only in KV — it will not survive a full site rebuild from git.
 
