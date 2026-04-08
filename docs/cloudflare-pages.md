@@ -58,7 +58,13 @@ Cloudflare assigns a `*.pages.dev` domain — note it for Step 5.
 npx wrangler kv namespace create CONTENT
 ```
 
-Copy the `id` from the output and paste it into `wrangler.jsonc`:
+Wrangler will ask a few questions:
+
+- **Would you like Wrangler to add it on your behalf?** → `Y` (lets Wrangler update `wrangler.jsonc` automatically)
+- **What binding name would you like to use?** → `CONTENT` (press Enter to confirm)
+- **For local dev, do you want to connect to the remote resource instead of a local resource?** → `N` (local dev uses a local KV store so you don't touch production data)
+
+If you chose `Y` to let Wrangler update the config, `wrangler.jsonc` is already updated. If you skipped it, paste the ID manually:
 
 ```jsonc
 "kv_namespaces": [
@@ -124,6 +130,8 @@ Future deploys run automatically on push to `main`.
 ```bash
 npx wrangler whoami
 ```
+
+The account ID is in the output.
 
 **Create a Cloudflare API token:**
 
