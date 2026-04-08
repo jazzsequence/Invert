@@ -64,16 +64,31 @@ Wrangler will ask a few questions:
 - **What binding name would you like to use?** → `CONTENT` (press Enter to confirm)
 - **For local dev, do you want to connect to the remote resource instead of a local resource?** → `N` (local dev uses a local KV store so you don't touch production data)
 
-If you chose `Y` to let Wrangler update the config, `wrangler.jsonc` is already updated. If you skipped it, paste the ID manually:
+If you chose `Y` to let Wrangler update the config, `wrangler.jsonc` is already updated with the KV namespace. Your final `wrangler.jsonc` should look like this (add any missing fields):
 
 ```jsonc
-"kv_namespaces": [
-  {
-    "binding": "CONTENT",
-    "id": "YOUR_KV_NAMESPACE_ID_HERE"
-  }
-]
+{
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "name": "YOUR-PROJECT-NAME",
+  "pages_build_output_dir": "./dist",
+  "kv_namespaces": [
+    {
+      "binding": "CONTENT",
+      "id": "YOUR_KV_NAMESPACE_ID_HERE"
+    }
+  ],
+  "vars": {
+    "GITHUB_REPO": "owner/your-repo",
+    "GITHUB_BRANCH": "main"
+  },
+  "observability": { "enabled": true }
+}
 ```
+
+> **Important:** `pages_build_output_dir` is required. Without it, Wrangler ignores the config file entirely — your KV binding and `vars` won't be applied to deployments, and subsequent deploys can wipe dashboard-set variables.
+
+> **Do not add an `assets` binding.** Cloudflare Pages provides the `ASSETS` binding automatically — declaring it manually causes a deploy error.
 
 ## Step 4 — Build the site
 
@@ -99,15 +114,15 @@ npx wrangler pages deploy dist/
 
 Uploads the static site and the Pages Function (`functions/api/mcp.ts`) together.
 
-## Step 7 — Set environment variables in Cloudflare
+## Step 7 — Add GITHUB_TOKEN to Cloudflare
+
+`GITHUB_REPO` and `GITHUB_BRANCH` are already in `wrangler.jsonc` (Step 3). Only the token needs to be added in the Cloudflare dashboard because it's a secret that should not be committed to git.
 
 Go to **Cloudflare dashboard → Workers & Pages → your project → Settings → Variables**.
 
-Add the following variables:
+Add one variable:
 
-- **`GITHUB_TOKEN`** — a GitHub PAT with Contents: read & write on your repo (see below)
-- **`GITHUB_REPO`** — your repo in `owner/repo` format, e.g. `jazzsequence/dragonfly`
-- **`GITHUB_BRANCH`** — your production branch, e.g. `main`
+- **`GITHUB_TOKEN`** — a GitHub PAT with Contents: read & write on your repo. Save it as **Encrypted** (it's a secret). See below for how to create it.
 
 **Creating a GitHub fine-grained token:**
 
