@@ -170,21 +170,49 @@ The workflow at `.github/workflows/deploy-cloudflare.yml` handles the rest.
 
 ## Connecting the MCP server
 
-Add to your MCP client config (`~/.claude/mcp.json` or project `.mcp.json`):
+### Claude Code
+
+Add to your project `.mcp.json` (or run `claude mcp add --transport http my-site https://your-project.pages.dev/api/mcp`):
 
 ```json
 {
   "mcpServers": {
     "my-site": {
+      "type": "http",
       "url": "https://your-project.pages.dev/api/mcp"
     }
   }
 }
 ```
 
-All 7 tools are available: `invert_list`, `invert_get`, `invert_search`, `invert_types`, `invert_create`, `invert_update`, `invert_delete`.
+The `"type": "http"` field is required — without it Claude Code won't connect.
 
-You can verify the server at `GET /api/mcp` — it returns a JSON summary including whether GitHub sync is configured.
+### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "my-site": {
+      "type": "http",
+      "url": "https://your-project.pages.dev/api/mcp"
+    }
+  }
+}
+```
+
+Restart Claude Desktop after saving.
+
+### Verifying the server
+
+The MCP endpoint (`/api/mcp`) only accepts POST from MCP clients. For a human-readable status page, visit:
+
+```
+https://your-project.pages.dev/api/mcp/info
+```
+
+This returns a JSON summary including tool names and whether GitHub sync is active.
 
 ---
 
