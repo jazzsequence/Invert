@@ -130,33 +130,33 @@ markdown/
 <style>
   .hero { margin-bottom: 1.5rem; }
   .hero h1 { font-size: 3rem; margin: 0 0 0.5rem; }
-  .tagline { font-size: 1.2rem; color: #555; margin: 0; }
+  .tagline { font-size: 1.2rem; color: var(--color-muted); margin: 0; }
   .intro { margin-bottom: 2.5rem; }
-  .intro p { font-size: 1.05rem; line-height: 1.7; color: #333; }
+  .intro p { font-size: 1.05rem; line-height: 1.7; color: var(--color-text-sub); }
   .concepts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.25rem;
     margin-bottom: 3rem;
   }
   .concept {
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     padding: 1.25rem;
   }
   .concept h3 { margin: 0 0 0.5rem; font-size: 1rem; }
-  .concept p { margin: 0; font-size: 0.9rem; color: #555; line-height: 1.5; }
-  .concept code { font-size: 0.85em; background: #f5f5f5; padding: 0.1em 0.3em; border-radius: 3px; }
+  .concept p { margin: 0; font-size: 0.9rem; color: var(--color-text-sub); line-height: 1.5; }
+  .concept code { font-size: 0.85em; background: var(--color-surface); padding: 0.1em 0.3em; border-radius: var(--radius-sm); }
   .docs-toc { margin-bottom: 2.5rem; }
   .docs-toc h2 { font-size: 1.4rem; margin-bottom: 0.75rem; }
   .docs-toc ul { list-style: none; padding: 0; margin: 0; }
-  .docs-toc li { padding: 0.4rem 0; border-bottom: 1px solid #f0f0f0; }
-  .docs-toc a { text-decoration: none; color: #0066cc; font-weight: 500; }
-  .docs-toc a:hover { text-decoration: underline; }
-  .doc-excerpt { color: #888; font-size: 0.9rem; }
+  .docs-toc li { padding: 0.4rem 0; border-bottom: 1px solid var(--color-border); }
+  .docs-toc a { text-decoration: none; color: var(--color-accent); font-weight: 500; }
+  .docs-toc a:hover { color: var(--color-accent-2); }
+  .doc-excerpt { color: var(--color-muted); font-size: 0.9rem; }
   .getting-started h2 { font-size: 1.4rem; margin-bottom: 1.5rem; }
   .gs-step {
-    border-left: 3px solid #e5e5e5;
+    border-left: 3px solid var(--color-border);
     padding-left: 1.25rem;
     margin-bottom: 2rem;
   }
@@ -168,8 +168,8 @@ markdown/
     gap: 0.6rem;
   }
   .step-num {
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--color-text);
+    color: var(--color-bg);
     font-size: 0.75rem;
     font-weight: 700;
     width: 1.4rem;
@@ -180,20 +180,20 @@ markdown/
     justify-content: center;
     flex-shrink: 0;
   }
-  .gs-step p { margin: 0 0 0.75rem; font-size: 0.95rem; color: #444; line-height: 1.6; }
+  .gs-step p { margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--color-text-sub); line-height: 1.6; }
   .gs-step p:last-child { margin-bottom: 0; }
-  .gs-step a { color: #0066cc; }
+  .gs-step a { color: var(--color-accent); }
   .gs-step pre {
-    background: #f5f5f5;
-    border-radius: 4px;
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
     padding: 0.75rem 1rem;
     margin: 0.5rem 0 0.75rem;
     overflow-x: auto;
   }
   .gs-step code { font-size: 0.85rem; }
   .gs-step p code {
-    background: #f5f5f5;
+    background: var(--color-surface);
     padding: 0.1em 0.4em;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
   }
 </style>
