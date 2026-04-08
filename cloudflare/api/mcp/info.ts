@@ -3,7 +3,9 @@
  * Accessible at /api/mcp/info
  */
 
-export const prerender = false;
+// prerender = true when building for static hosts (e.g. GitHub Pages).
+// Set DEPLOY_TARGET=cloudflare to keep this as an SSR route.
+export const prerender = import.meta.env.DEPLOY_TARGET !== 'cloudflare';
 
 import type { APIContext } from 'astro';
 
