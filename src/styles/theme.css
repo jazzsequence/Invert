@@ -1,0 +1,49 @@
+/**
+ * theme.css — Design tokens for Invert
+ *
+ * Override any of these variables in your own theme file or in a <style is:global>
+ * block in your layout to change the look of the entire site.
+ *
+ * Example (dark theme override):
+ *   :root {
+ *     --color-bg: #0d0d1a;
+ *     --color-text: #f0eeff;
+ *     --color-accent: #00e5cc;
+ *   }
+ */
+
+:root {
+  /* ── Backgrounds ── */
+  --color-bg: #ffffff;
+  --color-surface: #f5f5f5;       /* code blocks, pre */
+  --color-surface-tag: #f0f0f0;   /* chips, type badges */
+
+  /* ── Text ── */
+  --color-text: #1a1a1a;
+  --color-text-sub: #555555;      /* secondary / excerpt text */
+  --color-muted: #888888;         /* meta, timestamps, placeholders */
+
+  /* ── Borders ── */
+  --color-border: #e5e5e5;
+  --color-border-bright: #cccccc;
+
+  /* ── Accent ── */
+  --color-accent: #0066cc;        /* links, interactive focus */
+  --color-accent-2: #004499;      /* hover state */
+
+  /* ── Typography ── */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Code', monospace;
+  --font-size-base: 1rem;
+  --line-height-base: 1.65;
+
+  /* ── Radii ── */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+
+  /* ── Layout ── */
+  --content-max: 860px;
+  --body-max: 720px;
+  --space-page: 2rem;
+}
