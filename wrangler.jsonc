@@ -1,11 +1,31 @@
 {
+	// Cloudflare Pages configuration for Invert.
+	// Used by: `wrangler pages dev dist/` for local preview and CI/CD deployment.
+	//
+	// Required setup before deploying:
+	//   1. Replace YOUR-PROJECT-NAME with your Cloudflare Pages project name
+	//   2. Run: npx wrangler kv namespace create CONTENT
+	//      Then paste the returned ID into kv_namespaces below
+	//   3. Set GITHUB_REPO and GITHUB_BRANCH in vars below
+	//   4. Add GITHUB_TOKEN as an encrypted secret in the Cloudflare dashboard
+	//      (Workers & Pages → your project → Settings → Variables)
 	"compatibility_date": "2026-04-07",
-	"compatibility_flags": ["global_fetch_strictly_public", "nodejs_compat"],
-	"name": "invert",
-	"main": "@astrojs/cloudflare/entrypoints/server",
-	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS"
+	"compatibility_flags": ["nodejs_compat"],
+	"name": "YOUR-PROJECT-NAME",
+	"pages_build_output_dir": "./dist",
+	// KV namespace for content storage.
+	// Created with: npx wrangler kv namespace create CONTENT
+	"kv_namespaces": [
+		{
+			"binding": "CONTENT",
+			"id": "YOUR_KV_NAMESPACE_ID_HERE"
+		}
+	],
+	// Plain-text vars — safe to commit. GITHUB_TOKEN goes in the dashboard as a secret.
+	"vars": {
+		"SITE_NAME": "YOUR-SITE-NAME",
+		"GITHUB_REPO": "owner/your-repo",
+		"GITHUB_BRANCH": "main"
 	},
 	"observability": {
 		"enabled": true
