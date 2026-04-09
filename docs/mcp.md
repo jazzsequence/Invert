@@ -13,7 +13,7 @@ Invert ships with two MCP (Model Context Protocol) servers:
 - **Local (stdio)** — runs on your machine during development, reads and writes files directly
 - **Edge (HTTP)** — runs on Cloudflare Pages, readable and writable from anywhere via the deployed URL
 
-Both expose the same 7 tools. Which one you use depends on where you're working.
+Both expose the same 8 tools. Which one you use depends on where you're working.
 
 ## Local MCP server
 
@@ -177,6 +177,30 @@ Delete a content item.
 ```
 invert_delete(contentType: string, slug: string)
 ```
+
+### invert_normalize_and_create
+
+Normalize raw content returned by a source MCP and import it as Invert content. This tool handles field mapping from WordPress and Drupal data shapes to `InvertContent` — you pass the raw object from the source, it normalizes and writes.
+
+```
+invert_normalize_and_create(raw: object, sourceType: "wordpress" | "drupal", contentType?: string)
+```
+
+`raw` is whatever the source MCP returned. `sourceType` determines the normalization mapping. `contentType` optionally overrides the type derived from the source (e.g. map a WP `"post"` to `"articles"`).
+
+**WordPress** expects the shape returned by the WP REST API, ideally fetched with `?_embed` to include author, featured image, and taxonomy terms.
+
+**Drupal** expects a JSON:API node resource object (`data.type`, `data.id`, `data.attributes`).
+
+#### MCP-to-MCP import pattern
+
+When Claude is connected to both a source MCP (e.g. a WordPress or Drupal site's MCP server) and the Invert MCP simultaneously, you can sync specific content items with a natural language instruction:
+
+> "Pull the post about Python from myblog and add it to this Invert site."
+
+Claude fetches the post via the source MCP, then passes the raw result to `invert_normalize_and_create`. Field mapping stays in code rather than in the AI's reasoning chain, so imports are consistent regardless of how the instruction is phrased.
+
+Re-importing the same slug overwrites the existing file in place.
 
 ## Write durability (edge)
 
