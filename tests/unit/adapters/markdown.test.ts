@@ -133,4 +133,21 @@ describe('MarkdownAdapter (local)', () => {
     expect(items).toHaveLength(1);
     expect(items[0].contentType).toBe('posts');
   });
+
+  it('passes status field through from frontmatter', async () => {
+    const draftMarkdown = `---
+title: Draft Post
+slug: draft-post
+status: draft
+---
+Body content.
+`;
+    vi.mocked(fs.readdir).mockResolvedValue(['draft-post.md'] as any);
+    vi.mocked(fs.readFile).mockResolvedValue(draftMarkdown as any);
+
+    const adapter = new MarkdownAdapter({ source: 'local', contentDir: '/fake' });
+    const items = await adapter.getAll();
+
+    expect(items[0].status).toBe('draft');
+  });
 });

@@ -140,4 +140,18 @@ describe('JsonAdapter', () => {
 
     expect(items).toEqual([]);
   });
+
+  it('passes status field through from JSON', async () => {
+    vi.mocked(fs.readdir)
+      .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce(['draft.json'] as any);
+    vi.mocked(fs.readFile).mockResolvedValue(
+      JSON.stringify({ id: 'draft', slug: 'draft', title: 'Draft', body: '', contentType: 'posts', status: 'draft' }) as any
+    );
+
+    const adapter = new JsonAdapter({ contentDir: '/fake/content' });
+    const items = await adapter.getAll();
+
+    expect(items[0].status).toBe('draft');
+  });
 });
