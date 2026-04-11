@@ -202,7 +202,7 @@ function normalizeDrupal(raw: Record<string, unknown>, contentTypeOverride?: str
     slug,
     title: attrs?.title ?? slug,
     body: attrs?.body?.processed ?? attrs?.body?.value ?? '',
-    contentType: contentTypeOverride ?? derivedType || 'article',
+    contentType: contentTypeOverride ?? (derivedType || 'article'),
     date: attrs?.created,
     modified: attrs?.changed,
     excerpt: attrs?.field_summary ?? attrs?.body?.summary,
