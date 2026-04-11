@@ -26,3 +26,6 @@ worker-configuration.d.ts
 
 # claude-code-reviewer approval flag
 reviewer-approved
+
+# Test results
+tests/e2e/.results
