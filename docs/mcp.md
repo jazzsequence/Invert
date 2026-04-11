@@ -67,13 +67,13 @@ See [Cloudflare Pages deployment](cloudflare-pages) for the full setup guide. On
 
 ### Connecting to Claude Code (edge)
 
-Add to your project `.mcp.json`, or run:
+Claude Code supports Streamable HTTP natively. Add to your project `.mcp.json`, or run:
 
 ```bash
 claude mcp add --transport http my-site https://your-project.pages.dev/api/mcp
 ```
 
-Or manually:
+Or manually in `.mcp.json`:
 
 ```json
 {
@@ -86,22 +86,24 @@ Or manually:
 }
 ```
 
-The `"type": "http"` field is required.
+The `"type": "http"` field is required — without it Claude Code won't connect.
 
 ### Connecting to Claude Desktop (edge)
 
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Claude Desktop does not support `"type": "http"` MCP entries — it silently skips them. Use [mcp-remote](https://www.npmjs.com/package/mcp-remote) as a stdio bridge instead:
 
 ```json
 {
   "mcpServers": {
     "my-site": {
-      "type": "http",
-      "url": "https://your-project.pages.dev/api/mcp"
+      "command": "npx",
+      "args": ["mcp-remote", "https://your-project.pages.dev/api/mcp"]
     }
   }
 }
 ```
+
+`mcp-remote` proxies the stdio transport that Claude Desktop expects to your HTTP endpoint. No global install needed — `npx` fetches it on first use.
 
 Restart Claude Desktop after saving.
 

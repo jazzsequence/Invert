@@ -75,6 +75,53 @@ Everything else is optional. Use `meta` for arbitrary pass-through data.
 - `npm run build` — Build for production
 - `npm run preview` — Preview production build
 - `npm run mcp` — Start MCP server (separate process)
+- `npm test` — Run unit tests (Vitest)
+- `npm run lint` — Run ESLint
+- `npm run test:e2e` — Run Playwright E2E tests (requires built site)
+
+## Connecting the MCP Server
+
+### Claude Code (local)
+Add to `.mcp.json` in the project root:
+```json
+{
+  "mcpServers": {
+    "invert": {
+      "command": "npm",
+      "args": ["run", "mcp"],
+      "cwd": "/path/to/your/invert/site"
+    }
+  }
+}
+```
+
+### Claude Code (edge / Cloudflare Pages)
+Claude Code supports Streamable HTTP natively:
+```json
+{
+  "mcpServers": {
+    "my-site": {
+      "type": "http",
+      "url": "https://your-project.pages.dev/api/mcp"
+    }
+  }
+}
+```
+
+### Claude Desktop (edge)
+Claude Desktop does not support `"type": "http"` — it silently skips those entries.
+Use `mcp-remote` as a stdio bridge:
+```json
+{
+  "mcpServers": {
+    "my-site": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://your-project.pages.dev/api/mcp"]
+    }
+  }
+}
+```
+`mcp-remote` proxies stdio ↔ HTTP. No global install needed; `npx` fetches it on first use.
 
 ## Style
 - TypeScript strict mode, no `any` unless absolutely necessary
