@@ -1,0 +1,9 @@
+{
+  "id": "draft-test",
+  "slug": "draft-test",
+  "title": "Draft Test Post",
+  "body": "<p>This is a draft content item used in E2E tests. It should not appear at its normal URL.</p>",
+  "contentType": "test",
+  "status": "draft",
+  "excerpt": "A draft content item used in automated E2E tests."
+}
