@@ -18,12 +18,18 @@ When you call any of these functions, every registered adapter runs in parallel.
 
 ### getAllContent
 
-Returns every content item from every adapter, merged and sorted.
+Returns every content item from every adapter, merged, sorted by date descending, and with draft content excluded by default.
 
 ```typescript
 import { getAllContent } from '../lib/content';
 
 const all = await getAllContent();
+```
+
+To include draft content (e.g. for a preview page's `getStaticPaths`):
+
+```typescript
+const allIncludingDrafts = await getAllContent({ includeDrafts: true });
 ```
 
 Use this for index pages, sitemaps, feeds, or any page that lists across types.
