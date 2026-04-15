@@ -13,7 +13,7 @@ Invert ships with two MCP (Model Context Protocol) servers:
 - **Local (stdio)** — runs on your machine during development, reads and writes files directly
 - **Edge (HTTP)** — runs on Cloudflare Pages, readable and writable from anywhere via the deployed URL
 
-Both expose the same 8 tools. Which one you use depends on where you're working.
+Both expose the same core tools. Which one you use depends on where you're working.
 
 ## Local MCP server
 
@@ -61,9 +61,11 @@ Restart Claude Desktop after saving.
 
 ## Edge MCP server (Cloudflare Pages)
 
+> **Setup required**: The edge MCP server uses [Cloudflare Pages Functions](https://developers.cloudflare.com/pages/functions/) and works with `output: 'static'` — no SSR needed. Copy `cloudflare/api/mcp/` to `functions/api/mcp/` in your project, configure your KV namespace and GitHub vars in `wrangler.jsonc`, then deploy. See [Cloudflare Pages deployment](cloudflare-pages).
+
 When deployed to Cloudflare Pages, your site exposes an MCP server at `/api/mcp`. This uses the [MCP Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) and is accessible from Claude Code, Claude Desktop, or any MCP client.
 
-See [Cloudflare Pages deployment](cloudflare-pages) for the full setup guide. Once deployed:
+Once deployed:
 
 ### Connecting to Claude Code (edge)
 
@@ -119,7 +121,7 @@ Returns tool names and whether GitHub write-back sync is configured.
 
 ## Tools
 
-Both servers expose the same tools:
+Both servers expose the same core tools. The local server additionally exposes `invert_normalize_and_create` for importing content from external sources — this is local-only since it writes directly to disk.
 
 ### invert_list
 
