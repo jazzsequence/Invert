@@ -151,3 +151,81 @@ Body content.
     expect(items[0].status).toBe('draft');
   });
 });
+
+describe('MarkdownAdapter (github)', () => {
+  const GITHUB_DRAFT = `---
+title: GitHub Draft
+slug: github-draft
+status: draft
+---
+Draft body.
+`;
+
+  const GITHUB_PUBLISHED = `---
+title: GitHub Published
+slug: github-published
+status: published
+---
+Published body.
+`;
+
+  it('passes status field through from frontmatter (draft)', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ name: 'github-draft.md', download_url: 'https://example.com/github-draft.md' }],
+      } as any)
+      .mockResolvedValueOnce({ ok: true, text: async () => GITHUB_DRAFT } as any);
+
+    const adapter = new MarkdownAdapter({
+      source: 'github',
+      contentDir: 'content/posts',
+      repo: 'owner/repo',
+    });
+    const items = await adapter.getAll();
+
+    expect(items[0].status).toBe('draft');
+  });
+
+  it('passes status field through from frontmatter (published)', async () => {
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ name: 'github-published.md', download_url: 'https://example.com/github-published.md' }],
+      } as any)
+      .mockResolvedValueOnce({ ok: true, text: async () => GITHUB_PUBLISHED } as any);
+
+    const adapter = new MarkdownAdapter({
+      source: 'github',
+      contentDir: 'content/posts',
+      repo: 'owner/repo',
+    });
+    const items = await adapter.getAll();
+
+    expect(items[0].status).toBe('published');
+  });
+
+  it('leaves status undefined when frontmatter omits it', async () => {
+    const noStatus = `---
+title: No Status
+slug: no-status
+---
+Body.
+`;
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ name: 'no-status.md', download_url: 'https://example.com/no-status.md' }],
+      } as any)
+      .mockResolvedValueOnce({ ok: true, text: async () => noStatus } as any);
+
+    const adapter = new MarkdownAdapter({
+      source: 'github',
+      contentDir: 'content/posts',
+      repo: 'owner/repo',
+    });
+    const items = await adapter.getAll();
+
+    expect(items[0].status).toBeUndefined();
+  });
+});
