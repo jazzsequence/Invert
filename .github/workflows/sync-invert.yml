@@ -51,7 +51,7 @@ jobs:
             src/lib/utils.ts \
             mcp/tools.ts \
             mcp/server.ts \
-            functions/api/mcp/ \
+            functions/ \
             scripts/ \
             | wc -l | tr -d ' ')
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
@@ -69,7 +69,7 @@ jobs:
             src/lib/utils.ts \
             mcp/tools.ts \
             mcp/server.ts \
-            functions/api/mcp/ \
+            functions/ \
             scripts/
 
       - name: Get upstream version info

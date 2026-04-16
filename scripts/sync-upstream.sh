@@ -6,8 +6,8 @@
 #
 # What it syncs:
 #   Core framework files that Invert owns and implementations should not
-#   modify directly: adapters, content lib, MCP tools/server, edge MCP,
-#   and build scripts.
+#   modify directly: adapters, content lib, MCP tools/server, Cloudflare
+#   Pages Functions (edge MCP + draft preview), and build scripts.
 #
 # What it leaves alone:
 #   src/lib/config.ts    — adapter registration (you configure this)
@@ -41,7 +41,7 @@ CORE_PATHS=(
   src/lib/utils.ts
   mcp/tools.ts
   mcp/server.ts
-  functions/api/mcp/
+  functions/
   scripts/
 )
 
