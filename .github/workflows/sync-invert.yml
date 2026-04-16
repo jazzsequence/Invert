@@ -49,14 +49,14 @@ jobs:
             src/adapters/docs.ts \
             src/lib/content.ts \
             src/lib/utils.ts \
-            src/pages/ \
-            src/layouts/ \
-            src/components/ \
             mcp/tools.ts \
             mcp/server.ts \
             cloudflare/ \
             scripts/ \
-            tests/ \
+            tests/unit/adapters/ \
+            tests/unit/lib/ \
+            tests/unit/mcp/ \
+            tests/unit/cloudflare/ \
             .github/workflows/ci.yml \
             | wc -l | tr -d ' ')
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
@@ -72,14 +72,14 @@ jobs:
             src/adapters/docs.ts \
             src/lib/content.ts \
             src/lib/utils.ts \
-            src/pages/ \
-            src/layouts/ \
-            src/components/ \
             mcp/tools.ts \
             mcp/server.ts \
             cloudflare/ \
             scripts/ \
-            tests/ \
+            tests/unit/adapters/ \
+            tests/unit/lib/ \
+            tests/unit/mcp/ \
+            tests/unit/cloudflare/ \
             .github/workflows/ci.yml
 
       - name: Get upstream version info
@@ -111,9 +111,11 @@ jobs:
 
             ## What was NOT touched
 
+            - `src/pages/`, `src/layouts/`, `src/components/` — your UI layer
             - `src/lib/config.ts` — your adapter registration
             - `CLAUDE.md` — your project-specific AI instructions
             - `content/`, `markdown/`, `docs/` — your content
+            - `tests/e2e/` — your E2E tests
             - `wrangler.jsonc` — your Cloudflare project settings
             - `package.json` — check upstream for new dependencies manually
 
