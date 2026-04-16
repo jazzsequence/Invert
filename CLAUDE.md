@@ -79,6 +79,44 @@ Everything else is optional. Use `meta` for arbitrary pass-through data.
 - `npm run lint` — Run ESLint
 - `npm run test:e2e` — Run Playwright E2E tests (requires built site)
 
+## Content Write Model — Read This Before Using MCP Write Tools
+
+Where content goes when you call a write tool depends on which MCP server you
+are connected to. Getting this wrong leads to unnecessary git operations or
+content that silently doesn't appear where expected.
+
+### Edge MCP (HTTP — `/api/mcp` on Cloudflare Pages)
+
+`invert_create`, `invert_update`, `invert_delete`, and `invert_publish` write to
+**Cloudflare KV immediately**. Content is readable by MCP read tools at once.
+
+An async GitHub commit syncs the change back to the repository in the background.
+That commit triggers a Cloudflare Pages rebuild which updates the public static
+site (~1-2 minutes).
+
+**Do not commit or push manually. Do not trigger a deployment. The write tools
+handle everything — your only job is to call the right MCP tool.**
+
+### Local MCP (stdio — `npm run mcp`)
+
+Writes go to `content/[type]/[slug].json` on the local filesystem. Changes
+appear immediately in `npm run dev` but **do not appear on the Cloudflare-hosted
+site until you `git commit` and `git push` to the main branch**.
+
+### Draft workflow
+
+Pass `status: "draft"` to `invert_create` to create a draft instead of publishing
+immediately.
+
+- **Local**: draft goes to `.drafts/[type]/[slug].json` — gitignored, never
+  committed, never deployed. Preview at `/preview/[type]/[slug]` in dev mode.
+- **Edge**: draft goes to a separate KV namespace prefix, not the live content
+  store. Preview URL works; canonical URL returns 404.
+
+When a draft is ready to publish, call `invert_publish(contentType, slug)` — do
+not call `invert_update` with `status: "published"` manually. `invert_publish`
+handles the promotion atomically and, on the edge MCP, queues the GitHub commit.
+
 ## Connecting the MCP Server
 
 ### Claude Code (local)
