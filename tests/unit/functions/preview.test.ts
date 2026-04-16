@@ -151,3 +151,84 @@ describe('preview/[type]/[slug]', () => {
     expect(kv.get).toHaveBeenCalledWith('draft:articles:deep-dive');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Stylesheet injection
+// ---------------------------------------------------------------------------
+
+describe('preview/[type]/[slug] — stylesheet injection', () => {
+  beforeEach(() => vi.resetAllMocks());
+
+  function stubHomepage(linkTags = '<link rel="stylesheet" href="/_astro/Base.ABC123.css">') {
+    vi.stubGlobal('fetch', vi.fn(async () =>
+      new Response(`<html><head>${linkTags}</head><body>home</body></html>`, { status: 200 })
+    ));
+  }
+
+  function makeDraftKV() {
+    return makeMockKV({
+      'draft:posts:my-draft': JSON.stringify(makeDraft()),
+    });
+  }
+
+  it('fetches the homepage to extract stylesheets', async () => {
+    stubHomepage();
+    const kv = makeDraftKV();
+    await callPreview(kv, 'posts', 'my-draft');
+
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith('http://localhost/');
+  });
+
+  it('injects stylesheet link tags from the homepage into <head>', async () => {
+    stubHomepage('<link rel="stylesheet" href="/_astro/Base.ABC123.css">');
+    const kv = makeDraftKV();
+    const { html } = await callPreview(kv, 'posts', 'my-draft');
+
+    expect(html).toContain('<link rel="stylesheet" href="/_astro/Base.ABC123.css">');
+  });
+
+  it('injects all stylesheets when multiple are present', async () => {
+    stubHomepage([
+      '<link rel="stylesheet" href="/_astro/Base.ABC123.css">',
+      '<link rel="stylesheet" href="/_astro/extra.XYZ789.css">',
+    ].join('\n'));
+    const kv = makeDraftKV();
+    const { html } = await callPreview(kv, 'posts', 'my-draft');
+
+    expect(html).toContain('/_astro/Base.ABC123.css');
+    expect(html).toContain('/_astro/extra.XYZ789.css');
+  });
+
+  it('still renders the page if the homepage fetch fails', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network error'); }));
+    const kv = makeDraftKV();
+    const { response, html } = await callPreview(kv, 'posts', 'my-draft');
+
+    expect(response.status).toBe(200);
+    expect(html).toContain('My Draft Post');
+  });
+
+  it('still renders if the homepage returns a non-200 status', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('Not Found', { status: 404 })));
+    const kv = makeDraftKV();
+    const { response, html } = await callPreview(kv, 'posts', 'my-draft');
+
+    expect(response.status).toBe(200);
+    expect(html).toContain('My Draft Post');
+  });
+
+  it('does not inject non-stylesheet link tags', async () => {
+    stubHomepage([
+      '<link rel="stylesheet" href="/_astro/Base.ABC123.css">',
+      '<link rel="icon" href="/favicon.svg">',
+    ].join('\n'));
+    const kv = makeDraftKV();
+    const { html } = await callPreview(kv, 'posts', 'my-draft');
+
+    // stylesheet injected, favicon not (it's already in the template or not needed)
+    expect(html).toContain('/_astro/Base.ABC123.css');
+    // favicon link should not be duplicated from homepage scraping
+    const faviconCount = (html.match(/favicon\.svg/g) ?? []).length;
+    expect(faviconCount).toBeLessThanOrEqual(1);
+  });
+});
