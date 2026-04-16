@@ -25,8 +25,6 @@ Only the **framework internals** — files that Invert owns and that your implem
 | `mcp/server.ts` | Local MCP server |
 | `functions/api/mcp/` | Edge MCP server (Cloudflare Pages Functions) |
 | `scripts/` | Build scripts |
-| `tests/unit/` | Framework unit tests |
-| `.github/workflows/ci.yml` | CI pipeline |
 
 ## What is never touched
 
@@ -40,7 +38,8 @@ These files belong to your implementation and are always left alone:
 | `src/lib/config.ts` | Your adapter registration |
 | `CLAUDE.md` | Your project-specific AI instructions |
 | `content/`, `markdown/`, `docs/` | Your content |
-| `tests/e2e/` | Your E2E tests |
+| `tests/` | Your tests |
+| `.github/workflows/` | Your CI |
 | `wrangler.jsonc` | Your Cloudflare project settings |
 | `.mcp.json` | Your MCP connection config |
 | `package.json` | Your dependencies (shown in diff, not auto-applied) |

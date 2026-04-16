@@ -53,11 +53,6 @@ jobs:
             mcp/server.ts \
             functions/api/mcp/ \
             scripts/ \
-            tests/unit/adapters/ \
-            tests/unit/lib/ \
-            tests/unit/mcp/ \
-            tests/unit/functions/ \
-            .github/workflows/ci.yml \
             | wc -l | tr -d ' ')
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
           echo "Core file changes: $CHANGED lines"
@@ -75,12 +70,7 @@ jobs:
             mcp/tools.ts \
             mcp/server.ts \
             functions/api/mcp/ \
-            scripts/ \
-            tests/unit/adapters/ \
-            tests/unit/lib/ \
-            tests/unit/mcp/ \
-            tests/unit/functions/ \
-            .github/workflows/ci.yml
+            scripts/
 
       - name: Get upstream version info
         if: steps.diff.outputs.changed != '0'
@@ -107,7 +97,7 @@ jobs:
 
             ## What changed
 
-            Core files updated (adapters, content lib, MCP tools/server, edge MCP, build scripts, CI). Run the diff to see specifics.
+            Core files updated (adapters, content lib, MCP tools/server, edge MCP, build scripts). Run the diff to see specifics.
 
             ## What was NOT touched
 
@@ -115,7 +105,8 @@ jobs:
             - `src/lib/config.ts` — your adapter registration
             - `CLAUDE.md` — your project-specific AI instructions
             - `content/`, `markdown/`, `docs/` — your content
-            - `tests/e2e/` — your E2E tests
+            - `tests/` — your tests
+            - `.github/workflows/` — your CI
             - `wrangler.jsonc` — your Cloudflare project settings
             - `package.json` — check upstream for new dependencies manually
 
