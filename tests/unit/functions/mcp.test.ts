@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { POST } from '../../../functions/api/mcp/index.ts';
+import { onRequestPost } from '../../../functions/api/mcp/index.ts';
 
 // ---------------------------------------------------------------------------
 // KV mock — in-memory Map, tracks all calls
@@ -51,15 +51,10 @@ function stubFetch() {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeLocals(kv: ReturnType<typeof makeMockKV>, envOverrides: Record<string, unknown> = {}) {
+function makeContext(kv: ReturnType<typeof makeMockKV>, envOverrides: Record<string, unknown> = {}) {
   const waitUntil = vi.fn();
   return {
-    locals: {
-      runtime: {
-        env: { CONTENT: kv, ...envOverrides },
-        ctx: { waitUntil },
-      },
-    },
+    env: { CONTENT: kv, ...envOverrides },
     waitUntil,
   };
 }
@@ -70,7 +65,7 @@ async function callTool(
   args: Record<string, unknown>,
   envOverrides: Record<string, unknown> = {}
 ) {
-  const { locals, waitUntil } = makeLocals(kv, envOverrides);
+  const { env, waitUntil } = makeContext(kv, envOverrides);
   const request = new Request('http://localhost/api/mcp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -81,7 +76,7 @@ async function callTool(
       params: { name: toolName, arguments: args },
     }),
   });
-  const response = await POST({ request, locals } as Parameters<typeof POST>[0]);
+  const response = await onRequestPost({ request, env, waitUntil });
   const body = await response.json() as Record<string, unknown>;
   return { body, waitUntil };
 }

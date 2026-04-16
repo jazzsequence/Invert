@@ -1,13 +1,7 @@
 /**
- * src/pages/api/mcp/info.ts — Human-readable MCP server status
- * Accessible at /api/mcp/info
+ * functions/api/mcp/info.ts — Cloudflare Pages Function
+ * Human-readable MCP server status. Accessible at /api/mcp/info
  */
-
-// prerender = true when building for static hosts (e.g. GitHub Pages).
-// Set DEPLOY_TARGET=cloudflare to keep this as an SSR route.
-export const prerender = import.meta.env.DEPLOY_TARGET !== 'cloudflare';
-
-import type { APIContext } from 'astro';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -15,16 +9,17 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-export async function OPTIONS(): Promise<Response> {
+interface InfoEnv {
+  SITE_NAME?: string;
+  GITHUB_TOKEN?: string;
+  GITHUB_REPO?: string;
+}
+
+export async function onRequestOptions(): Promise<Response> {
   return new Response(null, { status: 204, headers: CORS });
 }
 
-interface CloudflareLocals {
-  runtime?: { env: Record<string, string | undefined> };
-}
-
-export async function GET({ locals }: APIContext): Promise<Response> {
-  const env = (locals as CloudflareLocals).runtime?.env ?? {};
+export async function onRequestGet({ env }: { env: InfoEnv }): Promise<Response> {
 
   return new Response(
     JSON.stringify({

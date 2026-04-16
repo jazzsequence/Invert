@@ -1,13 +1,14 @@
 /**
- * src/pages/api/mcp.ts — Astro API Route (replaces functions/api/mcp.ts)
+ * functions/api/mcp/index.ts — Cloudflare Pages Function
  *
  * Exposes Invert content via the Model Context Protocol (MCP) over HTTP.
- * Accessible at /api/mcp on the deployed Cloudflare Pages site.
+ * Served at /api/mcp by Cloudflare Pages Functions automatically.
  *
  * Write model
  * -----------
  * Writes go to Cloudflare KV immediately (content is readable at once), then
  * fire an async GitHub API commit so the git repo stays in sync.
+ * Drafts go to a separate KV prefix and are never GitHub-synced.
  *
  * Read model
  * ----------
@@ -22,12 +23,6 @@
  * Required Cloudflare bindings (wrangler.jsonc):
  *   CONTENT  KV namespace  (npx wrangler kv namespace create CONTENT)
  */
-
-// prerender = true when building for static hosts (e.g. GitHub Pages).
-// Set DEPLOY_TARGET=cloudflare to keep this as an SSR route.
-export const prerender = import.meta.env.DEPLOY_TARGET !== 'cloudflare';
-
-import type { APIContext } from 'astro';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -679,33 +674,27 @@ function withCors(res: Response): Response {
 }
 
 // ---------------------------------------------------------------------------
-// Astro API route handlers
+// Cloudflare Pages Function handlers
 // ---------------------------------------------------------------------------
 
-export async function OPTIONS(): Promise<Response> {
+interface PagesContext {
+  request: Request;
+  env: Env;
+  waitUntil: (p: Promise<unknown>) => void;
+}
+
+export async function onRequestOptions(): Promise<Response> {
   return new Response(null, { status: 204, headers: CORS });
 }
 
-export async function GET(): Promise<Response> {
+export async function onRequestGet(): Promise<Response> {
   // MCP Streamable HTTP spec: GET must return text/event-stream or 405.
   // We don't support server-initiated SSE, so return 405.
   // Humans can use /api/mcp/info for the status JSON.
   return withCors(new Response('Method Not Allowed', { status: 405 }));
 }
 
-interface CloudflareLocals {
-  runtime?: { env: Env; ctx: { waitUntil(p: Promise<unknown>): void } };
-}
-
-export async function POST({ request, locals }: APIContext): Promise<Response> {
-  const runtime = (locals as CloudflareLocals).runtime;
-  if (!runtime) {
-    return withCors(err(null, -32603, 'Runtime not available — ensure Cloudflare adapter is configured'));
-  }
-
-  const env = runtime.env;
-  const waitUntil = (p: Promise<unknown>) => runtime.ctx.waitUntil(p);
-
+export async function onRequestPost({ request, env, waitUntil }: PagesContext): Promise<Response> {
   let body: unknown;
   try {
     body = await request.json();
