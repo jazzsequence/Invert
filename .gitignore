@@ -24,6 +24,9 @@ worker-configuration.d.ts
 # macOS
 .DS_Store
 
+# Draft content created via MCP — transient, never committed or deployed
+.drafts/
+
 # claude-code-reviewer approval flag
 reviewer-approved
 
