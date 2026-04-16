@@ -141,6 +141,27 @@ describe('preview/[type]/[slug]', () => {
     expect(html).toContain('&lt;script&gt;');
   });
 
+  it('does not include a body color rule that would fight the Astro theme', async () => {
+    const kv = makeMockKV({
+      'draft:posts:my-draft': JSON.stringify(makeDraft()),
+    });
+    const { html } = await callPreview(kv, 'posts', 'my-draft');
+
+    // body layout/color must come from the injected Astro stylesheet, not inline styles
+    expect(html).not.toMatch(/body\s*\{[^}]*color\s*:/);
+  });
+
+  it('retains draft-specific inline styles', async () => {
+    const kv = makeMockKV({
+      'draft:posts:my-draft': JSON.stringify(makeDraft()),
+    });
+    const { html } = await callPreview(kv, 'posts', 'my-draft');
+
+    expect(html).toContain('.draft-banner');
+    expect(html).toContain('.draft-label');
+    expect(html).toContain('.back-link');
+  });
+
   it('uses type and slug from params to build the KV key', async () => {
     const kv = makeMockKV({
       'draft:articles:deep-dive': JSON.stringify({ ...makeDraft(), contentType: 'articles', slug: 'deep-dive' }),
