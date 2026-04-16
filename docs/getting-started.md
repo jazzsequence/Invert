@@ -75,7 +75,13 @@ In a second terminal:
 npm run mcp
 ```
 
-This starts the MCP server on stdio. Connect it to Claude Desktop or any MCP-compatible AI tool. The server provides read tools (`invert_list`, `invert_get`, `invert_search`, `invert_types`) and write tools (`invert_create`, `invert_update`, `invert_delete`) that operate on your `content/` directory.
+This starts the MCP server on stdio. Connect it to Claude Desktop or any MCP-compatible AI tool. The server provides:
+
+- **Read tools:** `invert_list`, `invert_get`, `invert_search`, `invert_types`
+- **Write tools:** `invert_create`, `invert_update`, `invert_delete`
+- **Draft tools:** pass `status: "draft"` to `invert_create` to create a draft without publishing; call `invert_publish` to promote it when ready
+
+Drafts created via the MCP go to `.drafts/` (gitignored) locally and are accessible at `/preview/[type]/[slug]` for review. See [MCP Server](mcp) for the full tool reference.
 
 ## Deploy
 

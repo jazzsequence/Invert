@@ -57,9 +57,9 @@ If your adapter reads from an API that returns Markdown, convert it with remark/
 
 Set `status: "draft"` on any content item to exclude it from the public site. Draft content is not built at its canonical URL (`/[type]/[slug]`) and is invisible to all content API functions by default.
 
-Draft content is built at `/preview/[type]/[slug]` instead, with a visible draft banner and `noindex` meta. Share the preview URL as `/preview/[type]/[slug]?preview` for review before publishing.
+Draft content is accessible at `/preview/[type]/[slug]` with a visible draft banner and `noindex` meta. On Cloudflare Pages this is served by a dynamic Pages Function reading from KV — no rebuild required. Share the URL for review before publishing.
 
-To publish a draft, remove the `status` field or change it to `"published"`.
+To publish a draft: if you created it via the MCP, call `invert_publish(contentType, slug)`. If you created it by hand (JSON or markdown file), change `status` to `"published"` or remove the field.
 
 ```json
 {

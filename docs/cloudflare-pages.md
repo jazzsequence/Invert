@@ -112,7 +112,7 @@ Replace with your assigned domain from Step 2.
 npx wrangler pages deploy dist/
 ```
 
-Uploads the static site and the Pages Function (`functions/api/mcp.ts`) together.
+Uploads the static site and the Pages Functions (`functions/api/mcp/`, `functions/preview/`) together.
 
 ## Step 7 — Add GITHUB_TOKEN to Cloudflare
 
