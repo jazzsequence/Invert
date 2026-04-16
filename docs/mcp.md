@@ -61,7 +61,7 @@ Restart Claude Desktop after saving.
 
 ## Edge MCP server (Cloudflare Pages)
 
-> **Setup required**: The edge MCP server uses [Cloudflare Pages Functions](https://developers.cloudflare.com/pages/functions/) and works with `output: 'static'` — no SSR needed. Copy `cloudflare/api/mcp/` to `functions/api/mcp/` in your project, configure your KV namespace and GitHub vars in `wrangler.jsonc`, then deploy. See [Cloudflare Pages deployment](cloudflare-pages).
+> **Setup required**: The edge MCP server uses [Cloudflare Pages Functions](https://developers.cloudflare.com/pages/functions/) and lives at `functions/api/mcp/` — the path Cloudflare Pages serves automatically. Configure your KV namespace and GitHub vars in `wrangler.jsonc`, then deploy. See [Cloudflare Pages deployment](cloudflare-pages).
 
 When deployed to Cloudflare Pages, your site exposes an MCP server at `/api/mcp`. This uses the [MCP Streamable HTTP transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) and is accessible from Claude Code, Claude Desktop, or any MCP client.
 

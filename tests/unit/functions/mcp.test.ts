@@ -1,7 +1,7 @@
 /**
  * Edge MCP draft routing tests.
  *
- * These test the behavior added to cloudflare/api/mcp/index.ts for draft
+ * These test the behavior added to functions/api/mcp/index.ts for draft
  * content support:
  *   - invert_create with status:'draft' → draft: KV prefix, no GitHub commit
  *   - invert_create with status:'published' or omitted → content: KV prefix, GitHub queued
@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { POST } from '../../../cloudflare/api/mcp/index.ts';
+import { POST } from '../../../functions/api/mcp/index.ts';
 
 // ---------------------------------------------------------------------------
 // KV mock — in-memory Map, tracks all calls

@@ -39,12 +39,12 @@ CORE_PATHS=(
   src/lib/utils.ts
   mcp/tools.ts
   mcp/server.ts
-  cloudflare/
+  functions/api/mcp/
   scripts/
   tests/unit/adapters/
   tests/unit/lib/
   tests/unit/mcp/
-  tests/unit/cloudflare/
+  tests/unit/functions/
   .github/workflows/ci.yml
 )
 

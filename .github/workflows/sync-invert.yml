@@ -51,12 +51,12 @@ jobs:
             src/lib/utils.ts \
             mcp/tools.ts \
             mcp/server.ts \
-            cloudflare/ \
+            functions/api/mcp/ \
             scripts/ \
             tests/unit/adapters/ \
             tests/unit/lib/ \
             tests/unit/mcp/ \
-            tests/unit/cloudflare/ \
+            tests/unit/functions/ \
             .github/workflows/ci.yml \
             | wc -l | tr -d ' ')
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
@@ -74,12 +74,12 @@ jobs:
             src/lib/utils.ts \
             mcp/tools.ts \
             mcp/server.ts \
-            cloudflare/ \
+            functions/api/mcp/ \
             scripts/ \
             tests/unit/adapters/ \
             tests/unit/lib/ \
             tests/unit/mcp/ \
-            tests/unit/cloudflare/ \
+            tests/unit/functions/ \
             .github/workflows/ci.yml
 
       - name: Get upstream version info

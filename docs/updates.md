@@ -23,7 +23,7 @@ Only the **framework internals** — files that Invert owns and that your implem
 | `src/lib/utils.ts` | Utility functions |
 | `mcp/tools.ts` | Local MCP tool implementations |
 | `mcp/server.ts` | Local MCP server |
-| `cloudflare/` | Edge MCP server |
+| `functions/api/mcp/` | Edge MCP server (Cloudflare Pages Functions) |
 | `scripts/` | Build scripts |
 | `tests/unit/` | Framework unit tests |
 | `.github/workflows/ci.yml` | CI pipeline |
