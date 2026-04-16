@@ -21,6 +21,9 @@ export const invertConfig: InvertConfig = {
 
   adapters: [
     new JsonAdapter({ contentDir: join(root, 'content') }),
+    // Drafts created via MCP land here — gitignored, never deployed to Cloudflare Pages.
+    // In production builds this dir doesn't exist, so the adapter returns nothing.
+    new JsonAdapter({ contentDir: join(root, '.drafts') }),
     new MarkdownAdapter({ source: 'local', contentDir: join(root, 'markdown') }),
     new DocsAdapter({ contentDir: join(root, 'docs') }),
 
