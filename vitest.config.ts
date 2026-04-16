@@ -6,7 +6,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],
-      include: ['src/**/*.ts', 'mcp/**/*.ts'],
+      include: ['src/**/*.ts', 'mcp/**/*.ts', 'cloudflare/**/*.ts'],
       // Config and server entry points have no testable logic of their own
       exclude: ['src/lib/config.ts', 'mcp/server.ts'],
     },
