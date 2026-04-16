@@ -121,7 +121,7 @@ Returns tool names and whether GitHub write-back sync is configured.
 
 ## Tools
 
-Both servers expose the same core tools. The local server additionally exposes `invert_normalize_and_create` for importing content from external sources — this is local-only since it writes directly to disk.
+Both servers expose the same core tools. The local server additionally exposes `invert_normalize_and_create` for importing content from external sources — this is local-only since it requires direct filesystem access.
 
 ### invert_list
 
@@ -160,11 +160,17 @@ invert_types()
 Create a new content item.
 
 ```
-invert_create(id, slug, title, body, contentType, date?, author?, excerpt?, ...)
+invert_create(id, slug, title, body, contentType, status?, date?, author?, excerpt?, ...)
 ```
 
-Local: writes `content/{contentType}/{slug}.json` to disk.
-Edge: writes to Cloudflare KV immediately, commits to GitHub asynchronously.
+The optional `status` field controls where the content is stored:
+
+| `status` | Local | Edge |
+|---|---|---|
+| `"draft"` | `.drafts/{type}/{slug}.json` (gitignored) | Draft KV prefix — no GitHub commit |
+| `"published"` or omitted | `content/{type}/{slug}.json` | Live KV + async GitHub commit |
+
+Draft content is only accessible via MCP read tools and the `/preview/{type}/{slug}` URL. It is never served at the canonical URL and never included in the static site build.
 
 ### invert_update
 
@@ -174,6 +180,22 @@ Update fields on an existing content item.
 invert_update(contentType: string, slug: string, updates: Partial<InvertContent>)
 ```
 
+Accepts `status` in the updates object. Changing `status` between `"draft"` and `"published"` moves the item between stores — no manual file management required.
+
+### invert_publish
+
+Promote a draft to published.
+
+```
+invert_publish(contentType: string, slug: string)
+```
+
+Moves the item from the draft store to the live store and sets `status: "published"`. On the edge, queues the async GitHub commit. Locally, moves the file from `.drafts/` to `content/`.
+
+Prefer this over calling `invert_update` with `status: "published"` — it handles the promotion atomically.
+
+Returns an error if no draft exists with that type and slug.
+
 ### invert_delete
 
 Delete a content item.
@@ -181,6 +203,8 @@ Delete a content item.
 ```
 invert_delete(contentType: string, slug: string)
 ```
+
+Checks both the live and draft stores. On the edge, only queues a GitHub commit if the item was in the live store — deleting a draft has no GitHub side-effect.
 
 ### invert_normalize_and_create
 
@@ -205,6 +229,26 @@ When Claude is connected to both a source MCP (e.g. a WordPress or Drupal site's
 Claude fetches the post via the source MCP, then passes the raw result to `invert_normalize_and_create`. Field mapping stays in code rather than in the AI's reasoning chain, so imports are consistent regardless of how the instruction is phrased.
 
 Re-importing the same slug overwrites the existing file in place.
+
+## Draft workflow
+
+Drafts let you create and iterate on content before it is publicly visible.
+
+```
+# 1. Create a draft
+invert_create({ ..., status: "draft" })
+
+# 2. Read or iterate — only visible via MCP tools and /preview/ URL
+invert_get("posts", "my-slug")
+invert_update("posts", "my-slug", { body: "revised content" })
+
+# 3. Publish when ready
+invert_publish("posts", "my-slug")
+```
+
+On the **local MCP**, drafts live in `.drafts/` which is gitignored. They are never committed and never included in a Cloudflare Pages build. `npm run dev` serves them at `/preview/{type}/{slug}` for local review.
+
+On the **edge MCP**, drafts live in a separate KV prefix. No GitHub commit is triggered. The static site rebuild cycle is not involved. When you call `invert_publish`, the item moves to the live KV namespace and the GitHub commit is queued — the static site updates in ~1-2 minutes.
 
 ## Write durability (edge)
 
