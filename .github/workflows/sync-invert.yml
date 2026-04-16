@@ -1,0 +1,130 @@
+name: Sync from Invert upstream
+
+# Runs weekly and opens a PR when core framework files have changed upstream.
+# Skip this workflow in the Invert template repo itself — it only makes sense
+# in downstream implementations.
+#
+# To use in your implementation repo:
+#   1. This file is included automatically when you create a site from the
+#      Invert template. No setup required.
+#   2. The workflow runs every Monday at 09:00 UTC, or trigger it manually
+#      via Actions → "Sync from Invert upstream" → Run workflow.
+#   3. If there are changes, a PR is opened on the `invert-sync` branch.
+#      Review the diff, run tests, and merge when ready.
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # Every Monday at 09:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync core files from Invert
+    runs-on: ubuntu-latest
+
+    # Skip when running inside the Invert template repo itself
+    if: github.repository != 'jazzsequence/Invert'
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add Invert as upstream remote
+        run: |
+          git remote add invert https://github.com/jazzsequence/Invert.git
+          git fetch invert main --quiet
+
+      - name: Check for core file changes
+        id: diff
+        run: |
+          CHANGED=$(git diff HEAD..invert/main -- \
+            src/adapters/interface.ts \
+            src/adapters/json.ts \
+            src/adapters/markdown.ts \
+            src/adapters/docs.ts \
+            src/lib/content.ts \
+            src/lib/utils.ts \
+            src/pages/ \
+            src/layouts/ \
+            src/components/ \
+            mcp/tools.ts \
+            mcp/server.ts \
+            cloudflare/ \
+            scripts/ \
+            tests/ \
+            .github/workflows/ci.yml \
+            | wc -l | tr -d ' ')
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "Core file changes: $CHANGED lines"
+
+      - name: Apply core file updates
+        if: steps.diff.outputs.changed != '0'
+        run: |
+          git checkout invert/main -- \
+            src/adapters/interface.ts \
+            src/adapters/json.ts \
+            src/adapters/markdown.ts \
+            src/adapters/docs.ts \
+            src/lib/content.ts \
+            src/lib/utils.ts \
+            src/pages/ \
+            src/layouts/ \
+            src/components/ \
+            mcp/tools.ts \
+            mcp/server.ts \
+            cloudflare/ \
+            scripts/ \
+            tests/ \
+            .github/workflows/ci.yml
+
+      - name: Get upstream version info
+        if: steps.diff.outputs.changed != '0'
+        id: version
+        run: |
+          COMMIT=$(git rev-parse --short invert/main)
+          DATE=$(git log invert/main -1 --format="%cd" --date=short)
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request
+        if: steps.diff.outputs.changed != '0'
+        uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676  # v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: invert-sync
+          delete-branch: true
+          commit-message: "chore: sync core files from Invert upstream (${{ steps.version.outputs.commit }})"
+          title: "chore: sync core files from Invert upstream (${{ steps.version.outputs.date }})"
+          body: |
+            Automated weekly sync of core framework files from the [Invert template](https://github.com/jazzsequence/Invert).
+
+            **Upstream commit:** `${{ steps.version.outputs.commit }}` (${{ steps.version.outputs.date }})
+
+            ## What changed
+
+            Core files updated (adapters, content lib, MCP tools/server, edge MCP, build scripts, CI). Run the diff to see specifics.
+
+            ## What was NOT touched
+
+            - `src/lib/config.ts` — your adapter registration
+            - `CLAUDE.md` — your project-specific AI instructions
+            - `content/`, `markdown/`, `docs/` — your content
+            - `wrangler.jsonc` — your Cloudflare project settings
+            - `package.json` — check upstream for new dependencies manually
+
+            ## Before merging
+
+            - [ ] Review the diff
+            - [ ] Check if `package.json` has new dependencies to add
+            - [ ] Run `npm install && npm test` locally
+            - [ ] Merge if CI passes
+          labels: upstream-sync
+
+      - name: No changes
+        if: steps.diff.outputs.changed == '0'
+        run: echo "✅ Core files are up to date with Invert upstream. No PR needed."
