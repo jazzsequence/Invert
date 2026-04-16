@@ -17,6 +17,7 @@ import {
   invertCreate,
   invertUpdate,
   invertDelete,
+  invertPublish,
   invertNormalizeAndCreate,
 } from '../../../mcp/tools.ts';
 import type { InvertContent } from '../../../src/adapters/interface.ts';
@@ -34,6 +35,10 @@ const serialize = (item: InvertContent) => JSON.stringify(item);
 
 // ---------------------------------------------------------------------------
 // invertList
+//
+// invertList calls readDir(CONTENT_DIR) and readDir(DRAFTS_DIR) concurrently.
+// Without a contentType filter, each readDir calls readdir(baseDir) first to
+// get type dirs. Mock order: CONTENT_DIR types → DRAFTS_DIR types → file lists.
 // ---------------------------------------------------------------------------
 
 describe('invertList()', () => {
@@ -41,8 +46,9 @@ describe('invertList()', () => {
 
   it('returns all items across type directories', async () => {
     vi.mocked(fs.readdir)
-      .mockResolvedValueOnce(['posts'] as any)
-      .mockResolvedValueOnce(['test-post.json'] as any);
+      .mockResolvedValueOnce(['posts'] as any)      // CONTENT_DIR type dirs
+      .mockResolvedValueOnce([] as any)              // DRAFTS_DIR type dirs (empty)
+      .mockResolvedValueOnce(['test-post.json'] as any); // CONTENT_DIR/posts files
     vi.mocked(fs.readFile).mockResolvedValue(serialize(makeItem()) as any);
 
     const items = await invertList();
@@ -52,7 +58,11 @@ describe('invertList()', () => {
   });
 
   it('scopes to a single type when contentType is provided', async () => {
-    vi.mocked(fs.readdir).mockResolvedValue(['test-post.json'] as any);
+    // With a contentType, readDir skips the top-level readdir and goes straight
+    // to the type path. Two concurrent calls: CONTENT_DIR/posts then DRAFTS_DIR/posts.
+    vi.mocked(fs.readdir)
+      .mockResolvedValueOnce(['test-post.json'] as any) // CONTENT_DIR/posts files
+      .mockResolvedValueOnce([] as any);                // DRAFTS_DIR/posts files (empty)
     vi.mocked(fs.readFile).mockResolvedValue(serialize(makeItem()) as any);
 
     const items = await invertList('posts');
@@ -63,6 +73,7 @@ describe('invertList()', () => {
   it('applies limit and offset for pagination', async () => {
     vi.mocked(fs.readdir)
       .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce([] as any)
       .mockResolvedValueOnce(['a.json', 'b.json', 'c.json'] as any);
     vi.mocked(fs.readFile)
       .mockResolvedValueOnce(serialize(makeItem({ id: 'a', slug: 'a' })) as any)
@@ -87,6 +98,7 @@ describe('invertList()', () => {
   it('skips malformed JSON files', async () => {
     vi.mocked(fs.readdir)
       .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce([] as any)
       .mockResolvedValueOnce(['valid.json', 'broken.json'] as any);
     vi.mocked(fs.readFile)
       .mockResolvedValueOnce(serialize(makeItem()) as any)
@@ -95,6 +107,43 @@ describe('invertList()', () => {
     const items = await invertList();
 
     expect(items).toHaveLength(1);
+  });
+
+  it('merges published and draft items, deduplicating by type::slug', async () => {
+    const published = makeItem({ status: 'published' });
+    const draft = makeItem({ id: 'draft-1', slug: 'draft-post', status: 'draft' });
+    vi.mocked(fs.readdir)
+      .mockResolvedValueOnce(['posts'] as any)             // CONTENT_DIR types
+      .mockResolvedValueOnce(['posts'] as any)             // DRAFTS_DIR types
+      .mockResolvedValueOnce(['test-post.json'] as any)    // CONTENT_DIR/posts files
+      .mockResolvedValueOnce(['draft-post.json'] as any);  // DRAFTS_DIR/posts files
+    vi.mocked(fs.readFile)
+      .mockResolvedValueOnce(serialize(published) as any)
+      .mockResolvedValueOnce(serialize(draft) as any);
+
+    const items = await invertList();
+
+    expect(items).toHaveLength(2);
+    expect(items.find((i) => i.slug === 'test-post')).toBeDefined();
+    expect(items.find((i) => i.slug === 'draft-post')).toBeDefined();
+  });
+
+  it('deduplicate by type::slug when same slug exists in both dirs (published wins)', async () => {
+    const published = makeItem({ status: 'published' });
+    const duplicate = makeItem({ status: 'draft' }); // same slug as published
+    vi.mocked(fs.readdir)
+      .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce(['test-post.json'] as any)
+      .mockResolvedValueOnce(['test-post.json'] as any);
+    vi.mocked(fs.readFile)
+      .mockResolvedValueOnce(serialize(published) as any)
+      .mockResolvedValueOnce(serialize(duplicate) as any);
+
+    const items = await invertList();
+
+    expect(items).toHaveLength(1);
+    expect(items[0].status).toBe('published');
   });
 });
 
@@ -113,12 +162,23 @@ describe('invertGet()', () => {
     expect(item?.slug).toBe('test-post');
   });
 
-  it('returns null when file does not exist', async () => {
+  it('returns null when file does not exist in either dir', async () => {
     vi.mocked(fs.readFile).mockRejectedValue(new Error('ENOENT'));
 
     const item = await invertGet('posts', 'nonexistent');
 
     expect(item).toBeNull();
+  });
+
+  it('falls back to .drafts/ when not found in content/', async () => {
+    const draft = makeItem({ status: 'draft' });
+    vi.mocked(fs.readFile)
+      .mockRejectedValueOnce(new Error('ENOENT'))        // not in content/
+      .mockResolvedValueOnce(serialize(draft) as any);   // found in .drafts/
+
+    const item = await invertGet('posts', 'test-post');
+
+    expect(item?.status).toBe('draft');
   });
 });
 
@@ -132,6 +192,7 @@ describe('invertSearch()', () => {
   it('matches items by title', async () => {
     vi.mocked(fs.readdir)
       .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce([] as any)
       .mockResolvedValueOnce(['guide.json'] as any);
     vi.mocked(fs.readFile).mockResolvedValue(
       serialize(makeItem({ slug: 'guide', title: 'Python Guide', body: '' })) as any
@@ -145,6 +206,7 @@ describe('invertSearch()', () => {
   it('matches items by body', async () => {
     vi.mocked(fs.readdir)
       .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce([] as any)
       .mockResolvedValueOnce(['post.json'] as any);
     vi.mocked(fs.readFile).mockResolvedValue(
       serialize(makeItem({ body: '<p>Learn TypeScript today</p>' })) as any
@@ -158,6 +220,7 @@ describe('invertSearch()', () => {
   it('matches items by excerpt', async () => {
     vi.mocked(fs.readdir)
       .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce([] as any)
       .mockResolvedValueOnce(['post.json'] as any);
     vi.mocked(fs.readFile).mockResolvedValue(
       serialize(makeItem({ excerpt: 'A quick intro to Astro' })) as any
@@ -171,6 +234,7 @@ describe('invertSearch()', () => {
   it('is case-insensitive', async () => {
     vi.mocked(fs.readdir)
       .mockResolvedValueOnce(['posts'] as any)
+      .mockResolvedValueOnce([] as any)
       .mockResolvedValueOnce(['guide.json'] as any);
     vi.mocked(fs.readFile).mockResolvedValue(
       serialize(makeItem({ title: 'Python Guide' })) as any
@@ -189,12 +253,26 @@ describe('invertSearch()', () => {
 describe('invertTypes()', () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it('returns the list of type directories', async () => {
-    vi.mocked(fs.readdir).mockResolvedValue(['posts', 'pages'] as any);
+  it('returns the list of type directories from both content/ and .drafts/', async () => {
+    vi.mocked(fs.readdir)
+      .mockResolvedValueOnce(['posts', 'pages'] as any) // CONTENT_DIR
+      .mockResolvedValueOnce(['drafts-only'] as any);   // DRAFTS_DIR
 
     const types = await invertTypes();
 
-    expect(types).toEqual(['posts', 'pages']);
+    expect(types).toContain('posts');
+    expect(types).toContain('pages');
+    expect(types).toContain('drafts-only');
+  });
+
+  it('deduplicates types that exist in both dirs', async () => {
+    vi.mocked(fs.readdir)
+      .mockResolvedValueOnce(['posts', 'pages'] as any)
+      .mockResolvedValueOnce(['posts'] as any); // 'posts' in both
+
+    const types = await invertTypes();
+
+    expect(types.filter((t) => t === 'posts')).toHaveLength(1);
   });
 
   it('returns empty array when content directory does not exist', async () => {
@@ -213,7 +291,7 @@ describe('invertTypes()', () => {
 describe('invertCreate()', () => {
   beforeEach(() => vi.resetAllMocks());
 
-  it('writes a JSON file and returns its path', async () => {
+  it('writes a JSON file to content/ and returns its path', async () => {
     vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
     vi.mocked(fs.writeFile).mockResolvedValue(undefined as any);
 
@@ -222,6 +300,7 @@ describe('invertCreate()', () => {
 
     expect(result.path).toContain('test-post.json');
     expect(result.path).toContain('posts');
+    expect(result.path).not.toContain('.drafts');
     expect(fs.writeFile).toHaveBeenCalledWith(
       expect.stringContaining('test-post.json'),
       JSON.stringify(item, null, 2),
@@ -236,6 +315,38 @@ describe('invertCreate()', () => {
     await invertCreate(makeItem());
 
     expect(fs.mkdir).toHaveBeenCalledWith(expect.any(String), { recursive: true });
+  });
+
+  it('routes draft content to .drafts/ when status is "draft"', async () => {
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+    vi.mocked(fs.writeFile).mockResolvedValue(undefined as any);
+
+    const item = makeItem({ status: 'draft' });
+    const result = await invertCreate(item);
+
+    expect(result.path).toContain('.drafts');
+    expect(result.path).not.toContain('content/');
+  });
+
+  it('routes published content to content/ when status is "published"', async () => {
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+    vi.mocked(fs.writeFile).mockResolvedValue(undefined as any);
+
+    const item = makeItem({ status: 'published' });
+    const result = await invertCreate(item);
+
+    expect(result.path).toContain('content/');
+    expect(result.path).not.toContain('.drafts');
+  });
+
+  it('routes to content/ when status is undefined (backwards compatible)', async () => {
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+    vi.mocked(fs.writeFile).mockResolvedValue(undefined as any);
+
+    const item = makeItem(); // no status field
+    const result = await invertCreate(item);
+
+    expect(result.path).toContain('content/');
   });
 });
 
@@ -271,6 +382,44 @@ describe('invertUpdate()', () => {
 
     expect(fs.writeFile).not.toHaveBeenCalled();
   });
+
+  it('moves file from .drafts/ to content/ when status changes to "published"', async () => {
+    const draft = makeItem({ status: 'draft' });
+    vi.mocked(fs.readFile)
+      .mockRejectedValueOnce(new Error('ENOENT'))         // not in content/
+      .mockResolvedValueOnce(serialize(draft) as any);    // found in .drafts/
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+    vi.mocked(fs.writeFile).mockResolvedValue(undefined as any);
+    vi.mocked(fs.unlink).mockResolvedValue(undefined as any);
+
+    const updated = await invertUpdate('posts', 'test-post', { status: 'published' });
+
+    expect(updated?.status).toBe('published');
+    expect(fs.unlink).toHaveBeenCalledWith(expect.stringContaining('.drafts'));
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining('content/'),
+      expect.any(String),
+      'utf-8'
+    );
+  });
+
+  it('moves file from content/ to .drafts/ when status changes to "draft"', async () => {
+    const published = makeItem({ status: 'published' });
+    vi.mocked(fs.readFile).mockResolvedValueOnce(serialize(published) as any); // found in content/
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+    vi.mocked(fs.writeFile).mockResolvedValue(undefined as any);
+    vi.mocked(fs.unlink).mockResolvedValue(undefined as any);
+
+    const updated = await invertUpdate('posts', 'test-post', { status: 'draft' });
+
+    expect(updated?.status).toBe('draft');
+    expect(fs.unlink).toHaveBeenCalledWith(expect.stringContaining('content/'));
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining('.drafts'),
+      expect.any(String),
+      'utf-8'
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -281,6 +430,7 @@ describe('invertDelete()', () => {
   beforeEach(() => vi.resetAllMocks());
 
   it('deletes the file and returns { deleted: true }', async () => {
+    vi.mocked(fs.readFile).mockResolvedValueOnce(serialize(makeItem()) as any);
     vi.mocked(fs.unlink).mockResolvedValue(undefined as any);
 
     const result = await invertDelete('posts', 'test-post');
@@ -289,12 +439,89 @@ describe('invertDelete()', () => {
     expect(fs.unlink).toHaveBeenCalledWith(expect.stringContaining('test-post.json'));
   });
 
-  it('returns { deleted: false } when the file does not exist', async () => {
-    vi.mocked(fs.unlink).mockRejectedValue(new Error('ENOENT'));
+  it('returns { deleted: false } when the file does not exist in either dir', async () => {
+    vi.mocked(fs.readFile).mockRejectedValue(new Error('ENOENT'));
 
     const result = await invertDelete('posts', 'nonexistent');
 
     expect(result.deleted).toBe(false);
+  });
+
+  it('deletes from .drafts/ when item is only there', async () => {
+    const draft = makeItem({ status: 'draft' });
+    vi.mocked(fs.readFile)
+      .mockRejectedValueOnce(new Error('ENOENT'))        // not in content/
+      .mockResolvedValueOnce(serialize(draft) as any);   // found in .drafts/
+    vi.mocked(fs.unlink).mockResolvedValue(undefined as any);
+
+    const result = await invertDelete('posts', 'test-post');
+
+    expect(result.deleted).toBe(true);
+    expect(fs.unlink).toHaveBeenCalledWith(expect.stringContaining('.drafts'));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// invertPublish
+// ---------------------------------------------------------------------------
+
+describe('invertPublish()', () => {
+  beforeEach(() => vi.resetAllMocks());
+
+  it('moves a draft from .drafts/ to content/ with status "published"', async () => {
+    const draft = makeItem({ status: 'draft' });
+    vi.mocked(fs.readFile).mockResolvedValueOnce(serialize(draft) as any);
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+    vi.mocked(fs.writeFile).mockResolvedValue(undefined as any);
+    vi.mocked(fs.unlink).mockResolvedValue(undefined as any);
+
+    const result = await invertPublish('posts', 'test-post');
+
+    expect(result?.path).toContain('content/');
+    expect(result?.path).toContain('test-post.json');
+    expect(fs.unlink).toHaveBeenCalledWith(expect.stringContaining('.drafts'));
+    const [, written] = vi.mocked(fs.writeFile).mock.calls[0];
+    const saved = JSON.parse(written as string) as InvertContent;
+    expect(saved.status).toBe('published');
+  });
+
+  it('returns null when the draft does not exist', async () => {
+    vi.mocked(fs.readFile).mockRejectedValue(new Error('ENOENT'));
+
+    const result = await invertPublish('posts', 'nonexistent');
+
+    expect(result).toBeNull();
+  });
+
+  it('does not write or unlink when draft is not found', async () => {
+    vi.mocked(fs.readFile).mockRejectedValue(new Error('ENOENT'));
+
+    await invertPublish('posts', 'nonexistent');
+
+    expect(fs.writeFile).not.toHaveBeenCalled();
+    expect(fs.unlink).not.toHaveBeenCalled();
+  });
+
+  it('preserves all existing fields when promoting to published', async () => {
+    const draft = makeItem({
+      status: 'draft',
+      title: 'My Draft',
+      author: 'Alice',
+      excerpt: 'Short summary',
+    });
+    vi.mocked(fs.readFile).mockResolvedValueOnce(serialize(draft) as any);
+    vi.mocked(fs.mkdir).mockResolvedValue(undefined as any);
+    vi.mocked(fs.writeFile).mockResolvedValue(undefined as any);
+    vi.mocked(fs.unlink).mockResolvedValue(undefined as any);
+
+    await invertPublish('posts', 'test-post');
+
+    const [, written] = vi.mocked(fs.writeFile).mock.calls[0];
+    const saved = JSON.parse(written as string) as InvertContent;
+    expect(saved.title).toBe('My Draft');
+    expect(saved.author).toBe('Alice');
+    expect(saved.excerpt).toBe('Short summary');
+    expect(saved.status).toBe('published');
   });
 });
 
